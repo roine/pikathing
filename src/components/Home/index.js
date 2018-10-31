@@ -1,5 +1,8 @@
+// @flow
+
 import React from 'react';
 import { connect } from 'react-redux';
+import type { State } from '../../reducers/type'
 
 function Home (props) {
 
@@ -20,7 +23,8 @@ function Home (props) {
     </div>);
 }
 
-function mapStateToProps (state) {
+function mapStateToProps (state: State) {
+  console.log('ds',state)
   return {
     todoListTemplates: state.todoListTemplates,
   };

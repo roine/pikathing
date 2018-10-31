@@ -1,43 +1,49 @@
+// @flow
+
 import React from 'react'
 import TodoListTemplateForm from './form'
 import { connect } from 'react-redux'
 import { updateTransientTodo, saveChanges } from './../../actions'
 import { withRouter } from 'react-router-dom'
+import uuidv4 from 'uuid/v4'
+import type { Dispatch } from '../../reducers/type'
+import type { TodoListTemplate } from './type'
 
 type Props = {
-  name: string,
-  todos: Array<String>
+  todoListTemplate: TodoListTemplate,
+  dispatch: Dispatch,
+  history: any
 }
 
-function TodoListTemplateCreate ({dispatch, name, todos, history}: Props) {
+function TodoListTemplateCreate ({dispatch, todoListTemplate, history}: Props) {
+
+  const {todos, id, name} = todoListTemplate
 
   function nameChange (name) {
-    dispatch(updateTransientTodo({name, todos}))
+    dispatch(updateTransientTodo({...todoListTemplate, name}))
   }
 
   function addTodo (title) {
     dispatch(updateTransientTodo(
-      {name, todos: [...todos, {title, completed: false, id: 1}]}))
+      {id, name, todos: [...todos, {title, completed: false, id: uuidv4()}]}))
   }
 
-  function commitChanges (data) {
-    dispatch(saveChanges(data))
+  function commitChanges () {
+    dispatch(saveChanges())
     history.push('/')
   }
 
   return <div>creation page
     <TodoListTemplateForm onSubmit={commitChanges}
                           onNameChange={nameChange}
-                          name={name}
-                          todos={todos}
+                          todoListTemplate={todoListTemplate}
                           onTodoAdd={addTodo}/>
   </div>
 }
 
 function mapStateToProps (state) {
   return {
-    name: state.transient.todoListTemplate.name,
-    todos: state.transient.todoListTemplate.todos,
+    todoListTemplate: state.transient.todoListTemplate,
   }
 }
 

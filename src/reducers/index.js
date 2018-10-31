@@ -1,44 +1,40 @@
+// @flow
+
 import {
   COMMIT_TRANSIENT_CHANGES,
   GET_FROM_LOCAL,
   UPDATE_TRANSIENT_TODO,
 } from '../constants'
 import uuidv4 from 'uuid/v4'
-
-type Todo = {
-  id: number,
-  title: string,
-  completed: boolean,
-}
-
-type TodoListTemplate = {
-  id: number,
-  name: string,
-  todos: Array<Todo>,
-}
+import type { TodoListTemplate } from './../components/TodoListTemplate/type'
+import type { Action } from './../actions'
+import type { State } from './type'
 
 const initialTemplate: TodoListTemplate = {
+  id: uuidv4(),
   name: 'House',
-  todos: [{id: uuidv4(), title: '3 beds or more', completed: false}],
+  todos: [
+    {
+      id: uuidv4(),
+      title: '3 beds or more',
+      completed: false,
+    }],
 }
 
-type State = {
-  todoListTemplates: Array<TodoListTemplate>,
-  transient: {
-    todoListTemplate: TodoListTemplate
-  }
+const initialTransientTemplate: TodoListTemplate = {
+  id: uuidv4(),
+  name: '',
+  todos: [],
 }
 
-const initialTransientTemplate = {name: '', todos: []}
-
-const initialState = {
+const initialState: State = {
   todoListTemplates: [initialTemplate],
   transient: {
     todoListTemplate: initialTransientTemplate,
   },
 }
 
-function reducer (state: State = initialState, action) {
+function reducer (state: State = initialState, action: Action): State {
   switch (action.type) {
     case UPDATE_TRANSIENT_TODO:
       return {
@@ -53,7 +49,7 @@ function reducer (state: State = initialState, action) {
         ...state,
         todoListTemplates: [
           ...state.todoListTemplates,
-          {...state.transient.todoListTemplate, id: uuidv4()},
+          {...state.transient.todoListTemplate},
         ],
         transient: {
           ...state.transient,
@@ -61,7 +57,10 @@ function reducer (state: State = initialState, action) {
         },
       }
     case GET_FROM_LOCAL:
-      return action.state
+      if (action.state) {
+        return action.state
+      }
+      return state
     default:
       return state
   }

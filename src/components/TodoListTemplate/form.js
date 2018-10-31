@@ -1,13 +1,34 @@
+// @flow
 import React from 'react'
+import type { TodoListTemplate } from './type'
 
-function TodoListTemplateForm ({onSubmit, name, todos, onNameChange, onTodoAdd}) {
+type Props = {
+  onSubmit: (void => void),
+  todoListTemplate: TodoListTemplate,
+  onNameChange: string => void,
+  onTodoAdd: string => void
+}
 
-  let todoText
+function TodoListTemplateForm ({onSubmit, todoListTemplate, onNameChange, onTodoAdd}: Props) {
+
+  let todoText: ?HTMLInputElement
+
+  const {name} = todoListTemplate
+
+  function addTodo () {
+    if (todoText) {
+      onTodoAdd(todoText.value)
+      todoText.value = ''
+    }
+    else {
+      alert('todo element not found')
+    }
+  }
 
   return (
     <form onSubmit={(e) => {
       e.preventDefault()
-      onSubmit({name, todos})
+      onSubmit()
     }}>
       <div className="form-group">
         <label htmlFor="name">Name</label>
@@ -19,10 +40,7 @@ function TodoListTemplateForm ({onSubmit, name, todos, onNameChange, onTodoAdd})
         <input type="text" className="form-control"
                ref={node => todoText = node}/>
       </div>
-      <button type="button" onClick={() => {
-        onTodoAdd(todoText.value)
-        todoText.value = ''
-      }}>Add Todo
+      <button type="button" onClick={addTodo}>Add Todo
       </button>
       <button type="submit">Save and Exit</button>
     </form>

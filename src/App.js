@@ -8,13 +8,15 @@ import Home from './components/Home'
 import TodoListTemplateCreate from './components/TodoListTemplate/create'
 import { getFromLocal } from './actions'
 import { getLocal } from './localStore'
+import type { TodoListTemplate } from './components/TodoListTemplate/type'
+import type { Dispatch } from './reducers/type'
+
 type Props = {
-  dispatch: (() => any),
+  dispatch: Dispatch,
   transient: {
-    todoListTemplate: any
+    todoListTemplate: TodoListTemplate
   }
 }
-
 
 class App extends Component<Props> {
 
@@ -41,7 +43,7 @@ class App extends Component<Props> {
             <Route path="/todolisttemplate/create"
                    component={TodoListTemplateCreate}/>
           </Switch>
-          {JSON.stringify(this.props.transient.todoListTemplate)}
+          {JSON.stringify(this.props.transient)}
         </div>
       </Router>
     )
