@@ -1,22 +1,20 @@
-// @flow
-
 import React from 'react'
 import TodoListTemplateForm from './form'
 import { connect } from 'react-redux'
-import { updateTransientTodo, saveChanges } from './../../actions'
-import { withRouter } from 'react-router-dom'
+import {
+  cloneTemplateToTransient,
+  resetTransient,
+  saveChanges,
+  updateTransientTodo,
+} from '../../actions'
 import uuidv4 from 'uuid/v4'
-import type { Dispatch } from '../../reducers/type'
-import type { TodoListTemplate } from './type'
-import { resetTransient } from '../../actions'
 
-type Props = {
-  todoListTemplate: TodoListTemplate,
-  dispatch: Dispatch,
-  history: any
-}
+class Edit extends React.Component<Props> {
 
-class Create extends React.Component<Props> {
+  componentDidMount () {
+    console.log('child')
+    this.props.dispatch(cloneTemplateToTransient(this.props.match.params.id))
+  }
 
   componentWillUnmount () {
     this.props.dispatch(resetTransient)
@@ -30,11 +28,7 @@ class Create extends React.Component<Props> {
   addTodo = (title) => {
     const {id, name, todos} = this.props.todoListTemplate
     this.props.dispatch(updateTransientTodo(
-      {
-        id,
-        name,
-        todos: [...todos, {title, completed: false, id: uuidv4()}],
-      }))
+      {id, name, todos: [...todos, {title, completed: false, id: uuidv4()}]}))
   }
 
   commitChanges = () => {
@@ -43,13 +37,20 @@ class Create extends React.Component<Props> {
   }
 
   render () {
+
+    if(!this.props.todoListTemplate) {
+      return <div>loading</div>
+    }
+
     return (
-      <div>creation page
+      <div>
         <TodoListTemplateForm onSubmit={this.commitChanges}
                               todoListTemplate={this.props.todoListTemplate}
                               onNameChange={this.nameChange}
                               onTodoAdd={this.addTodo}/>
-      </div>)
+      </div>
+    )
+
   }
 }
 
@@ -59,4 +60,4 @@ function mapStateToProps (state) {
   }
 }
 
-export default withRouter(connect(mapStateToProps)(Create))
+export default connect(mapStateToProps)(Edit)

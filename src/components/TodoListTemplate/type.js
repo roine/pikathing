@@ -1,13 +1,13 @@
 // @flow
 
-export type TodoListTemplate = {
+export type TodoListTemplate = {|
   id: string,
   name: string,
   todos: Array<Todo>,
-}
+|}
 
-export type Todo = {
+export type Todo = {|
   id: string,
   title: string,
   completed: boolean,
-}
+|}

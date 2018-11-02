@@ -3,6 +3,7 @@
 [include]
 
 [libs]
+jest
 
 [lints]
 

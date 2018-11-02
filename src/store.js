@@ -5,6 +5,6 @@ import throttle from 'lodash/throttle'
 
 const store = createStore(reducers)
 
-store.subscribe(throttle(() => saveLocal(store.getState()), 800))
+store.subscribe(throttle(() => saveLocal(store.getState().todoListTemplates), 800))
 
 export default store

@@ -4,28 +4,46 @@ import {
   COMMIT_TRANSIENT_CHANGES,
   UPDATE_TRANSIENT_TODO,
   GET_FROM_LOCAL,
+  EDIT_TEMPLATE, RESET_TRANSIENT, CLONE_TO_TRANSIENT,
 } from './constants'
 import type { TodoListTemplate } from './components/TodoListTemplate/type'
 import type { State } from './reducers/type'
 
-type UpdateTransientTodoAction = {
+type UpdateTransientTodoAction = {|
   type: typeof UPDATE_TRANSIENT_TODO,
   todoListTemplate: TodoListTemplate
-}
+|}
 
-type SaveChangesAction = {
+type SaveChangesAction = {|
   type: typeof COMMIT_TRANSIENT_CHANGES
-}
+|}
 
-type GetFromLocalAction = {
+type GetFromLocalAction = {|
   type: typeof GET_FROM_LOCAL,
   state: State,
+|}
+
+type EditTemplateAction = {|
+  type: typeof EDIT_TEMPLATE,
+  templateId: string
+|}
+
+type ResetTransient = {
+  type: typeof RESET_TRANSIENT
 }
+
+type CloneTemplateToTransientAction = {|
+  type: typeof CLONE_TO_TRANSIENT,
+  templateId: string
+|}
 
 export type Action =
   | UpdateTransientTodoAction
   | SaveChangesAction
   | GetFromLocalAction
+  | EditTemplateAction
+  | ResetTransient
+  | CloneTemplateToTransientAction
 
 export const updateTransientTodo = (todoListTemplate: TodoListTemplate): UpdateTransientTodoAction => {
   return {
@@ -44,5 +62,23 @@ export const getFromLocal = (state: any): GetFromLocalAction => {
   return {
     type: GET_FROM_LOCAL,
     state,
+  }
+}
+
+export const editTemplate = (templateId: string): EditTemplateAction => {
+  return {
+    type: EDIT_TEMPLATE,
+    templateId,
+  }
+}
+
+export const resetTransient = {
+  type: RESET_TRANSIENT,
+}
+
+export const cloneTemplateToTransient = (templateId: string): CloneTemplateToTransientAction => {
+  return {
+    type: CLONE_TO_TRANSIENT,
+    templateId,
   }
 }

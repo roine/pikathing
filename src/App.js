@@ -6,6 +6,7 @@ import { connect } from 'react-redux'
 import { BrowserRouter as Router, Link, Route, Switch } from 'react-router-dom'
 import Home from './components/Home'
 import TodoListTemplateCreate from './components/TodoListTemplate/create'
+import TodoListTemplateEdit from './components/TodoListTemplate/edit'
 import { getFromLocal } from './actions'
 import { getLocal } from './localStore'
 import type { TodoListTemplate } from './components/TodoListTemplate/type'
@@ -19,8 +20,8 @@ type Props = {
 }
 
 class App extends Component<Props> {
-
-  componentDidMount () {
+  constructor (props) {
+    super(props)
     this.props.dispatch(getFromLocal(getLocal()))
   }
 
@@ -42,6 +43,8 @@ class App extends Component<Props> {
             <Route exact path="/" component={Home}/>
             <Route path="/todolisttemplate/create"
                    component={TodoListTemplateCreate}/>
+            <Route path="/todolisttemplate/edit/:id"
+                   component={TodoListTemplateEdit}/>
           </Switch>
           {JSON.stringify(this.props.transient)}
         </div>

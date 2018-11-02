@@ -1,33 +1,55 @@
 // @flow
 
-import React from 'react';
-import { connect } from 'react-redux';
-import type { State } from '../../reducers/type'
+import React from 'react'
+import { connect } from 'react-redux'
+import type { Dispatch, State } from '../../reducers/type'
+import type { TodoListTemplate } from '../TodoListTemplate/type'
+import { editTemplate } from '../../actions'
+import { withRouter } from 'react-router-dom'
 
-function Home (props) {
+type Props = {
+  todoListTemplates: Array<TodoListTemplate>,
+  dispatch: Dispatch,
+  history: any
+}
 
-  const noTemplateView = <div>There is no template yet.</div>;
+function Home (props: Props) {
 
-  function templateListView (todoTemplates) {
-    return <div>Here's a list of available templates
-      {todoTemplates.map(singleTemplateView)}</div>;
+  function edit (templateId: string) {
+    props.dispatch(editTemplate(templateId))
+    props.history.push(`/todolisttemplate/edit/${templateId}`)
   }
 
-  function singleTemplateView(template, idx) {
-    return <div key={idx}>{template.name} - {template.id}</div>
+  const noTemplateView = <div>There is no template yet.</div>
+
+  function templateListView (todoTemplates) {
+
+    return <div>Here's a list of available templates
+      {todoTemplates.map(singleTemplateView)}</div>
+  }
+
+  function singleTemplateView (template: TodoListTemplate, idx: number) {
+    return (
+      <div key={idx}>
+        {template.name} - {template.id}
+        <button onClick={() => edit(template.id)}>Edit</button>
+      </div>
+    )
   }
 
   return (
     <div>
-      {props.todoListTemplates.length ?  templateListView(props.todoListTemplates): noTemplateView}
-    </div>);
+      {props.todoListTemplates.length ?
+        templateListView(props.todoListTemplates) :
+        noTemplateView
+      }
+    </div>)
 }
 
 function mapStateToProps (state: State) {
-  console.log('ds',state)
   return {
     todoListTemplates: state.todoListTemplates,
-  };
+  }
 }
 
-export default connect(mapStateToProps)(Home);
+export default withRouter(connect(mapStateToProps)(Home))

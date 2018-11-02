@@ -782,6 +782,11 @@
   resolved "https://registry.yarnpkg.com/@nodelib/fs.stat/-/fs.stat-1.1.2.tgz#54c5a964462be3d4d78af631363c18d6fa91ac26"
   integrity sha512-yprFYuno9FtNsSHVlSWd+nRlmGoAbqbeCwOryP6sC/zoCjhpArcRMYp19EvpSUSizJAlsXEwJv+wcWS9XaXdMw==
 
+"@roine/dict@^2.0.3":
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/@roine/dict/-/dict-2.0.3.tgz#806a18761005823e9b1a92c668445ef07a20fd59"
+  integrity sha512-Vikif2I/NSfZxwi/0v4Z0O697ppsZIs1YQw9jjYyBTcv6pl0X3L1ERaUOzr+X/2mHXrG6K9SVBUt0uNHQLdWOg==
+
 "@svgr/core@^2.4.1":
   version "2.4.1"
   resolved "https://registry.yarnpkg.com/@svgr/core/-/core-2.4.1.tgz#03a407c28c4a1d84305ae95021e8eabfda8fa731"
@@ -3802,11 +3807,6 @@ flow-bin@^0.85.0:
   version "0.85.0"
   resolved "https://registry.yarnpkg.com/flow-bin/-/flow-bin-0.85.0.tgz#a3ca80748a35a071d5bbb2fcd61d64d977fc53a6"
   integrity sha512-ougBA2q6Rn9sZrjZQ9r5pTFxCotlGouySpD2yRIuq5AYwwfIT8HHhVMeSwrN5qJayjHINLJyrnsSkkPCZyfMrQ==
-
-flow@^0.2.3:
-  version "0.2.3"
-  resolved "https://registry.yarnpkg.com/flow/-/flow-0.2.3.tgz#f8da65efa249127ec99376a28896572a9795d1af"
-  integrity sha1-+Npl76JJEn7Jk3aiiJZXKpeV0a8=
 
 flush-write-stream@^1.0.0:
   version "1.0.3"
