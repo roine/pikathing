@@ -1,0 +1,20 @@
+{
+  "state": [
+    {
+      "id": "123",
+      "name": "Home",
+      "todos": []
+    },
+    {
+      "id": "124",
+      "name": "Car",
+      "todos": [
+        {
+          "id": "125",
+          "title": "Red",
+          "completed": "false"
+        }
+      ]
+    }
+  ]
+}

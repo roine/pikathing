@@ -48,7 +48,8 @@ class Create extends React.Component<Props> {
         <TodoListTemplateForm onSubmit={this.commitChanges}
                               todoListTemplate={this.props.todoListTemplate}
                               onNameChange={this.nameChange}
-                              onTodoAdd={this.addTodo}/>
+                              onTodoAdd={this.addTodo}
+        className="form-create"/>
       </div>)
   }
 }

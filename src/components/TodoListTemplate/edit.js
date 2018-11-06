@@ -12,7 +12,6 @@ import uuidv4 from 'uuid/v4'
 class Edit extends React.Component<Props> {
 
   componentDidMount () {
-    console.log('child')
     this.props.dispatch(cloneTemplateToTransient(this.props.match.params.id))
   }
 
@@ -38,7 +37,7 @@ class Edit extends React.Component<Props> {
 
   render () {
 
-    if(!this.props.todoListTemplate) {
+    if (!this.props.todoListTemplate) {
       return <div>loading</div>
     }
 
@@ -47,7 +46,8 @@ class Edit extends React.Component<Props> {
         <TodoListTemplateForm onSubmit={this.commitChanges}
                               todoListTemplate={this.props.todoListTemplate}
                               onNameChange={this.nameChange}
-                              onTodoAdd={this.addTodo}/>
+                              onTodoAdd={this.addTodo}
+                              className="form-edit"/>
       </div>
     )
 

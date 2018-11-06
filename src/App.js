@@ -7,6 +7,7 @@ import { BrowserRouter as Router, Link, Route, Switch } from 'react-router-dom'
 import Home from './components/Home'
 import TodoListTemplateCreate from './components/TodoListTemplate/create'
 import TodoListTemplateEdit from './components/TodoListTemplate/edit'
+import TodoListTemplateShow from './components/TodoListTemplate/show'
 import { getFromLocal } from './actions'
 import { getLocal } from './localStore'
 import type { TodoListTemplate } from './components/TodoListTemplate/type'
@@ -29,12 +30,13 @@ class App extends Component<Props> {
     return (
       <Router>
         <div className="container">
-          <ul>
+          <ul className="navigation">
             <li>
               <Link to="/">Home</Link>
             </li>
             <li>
-              <Link to="/todolisttemplate/create">
+              <Link className="navigation__create"
+                    to="/todolisttemplate/create">
                 Create a todo list template
               </Link>
             </li>
@@ -45,6 +47,8 @@ class App extends Component<Props> {
                    component={TodoListTemplateCreate}/>
             <Route path="/todolisttemplate/edit/:id"
                    component={TodoListTemplateEdit}/>
+            <Route path="/todolisttemplate/show/:id"
+                   component={TodoListTemplateShow}/>
           </Switch>
           {JSON.stringify(this.props.transient)}
         </div>

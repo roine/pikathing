@@ -30,6 +30,8 @@
     "not op_mini all"
   ],
   "devDependencies": {
-    "flow-bin": "^0.85.0"
+    "faker": "^4.1.0",
+    "flow-bin": "^0.85.0",
+    "puppeteer": "^1.10.0"
   }
 }

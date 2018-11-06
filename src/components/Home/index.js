@@ -20,25 +20,40 @@ function Home (props: Props) {
     props.history.push(`/todolisttemplate/edit/${templateId}`)
   }
 
-  const noTemplateView = <div>There is no template yet.</div>
+  function show (templateId: string) {
+    props.history.push(`todolisttemplate/show/${templateId}`)
+  }
+
+  const noTemplateView = (
+    <div className="templates__none">
+      There is no template yet.
+    </div>
+  )
 
   function templateListView (todoTemplates) {
-
-    return <div>Here's a list of available templates
-      {todoTemplates.map(singleTemplateView)}</div>
+    return (
+      <ul className="templates__list">
+        {todoTemplates.map(singleTemplateView)}
+      </ul>
+    )
   }
 
   function singleTemplateView (template: TodoListTemplate, idx: number) {
     return (
-      <div key={idx}>
+      <li key={idx} className="templates__list__item">
         {template.name} - {template.id}
-        <button onClick={() => edit(template.id)}>Edit</button>
-      </div>
+        <button onClick={() => edit(template.id)}
+                className="templates__list__item__edit-button">Edit
+        </button>
+        <button onClick={() => show(template.id)}
+                className="templates__list__item__show-button">Show
+        </button>
+      </li>
     )
   }
 
   return (
-    <div>
+    <div className="templates">
       {props.todoListTemplates.length ?
         templateListView(props.todoListTemplates) :
         noTemplateView
