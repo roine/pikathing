@@ -4,8 +4,11 @@ import {
   COMMIT_TRANSIENT_CHANGES,
   UPDATE_TRANSIENT_TODO,
   GET_FROM_LOCAL,
-  EDIT_TEMPLATE, RESET_TRANSIENT, CLONE_TO_TRANSIENT,
-} from './constants'
+  EDIT_TEMPLATE,
+  RESET_TRANSIENT,
+  CLONE_TO_TRANSIENT,
+  CREATE_TODO_LIST_FROM_TEMPLATE
+} from './constants';
 import type { TodoListTemplate } from './components/TodoListTemplate/type'
 import type { State } from './reducers/type'
 
@@ -35,6 +38,12 @@ type ResetTransient = {
 type CloneTemplateToTransientAction = {|
   type: typeof CLONE_TO_TRANSIENT,
   templateId: string
+|}
+
+type CreateTodoListFromTemplateAction = {|
+  type: typeof CREATE_TODO_LIST_FROM_TEMPLATE,
+  templateId: string,
+  title: string
 |}
 
 export type Action =
@@ -82,3 +91,9 @@ export const cloneTemplateToTransient = (templateId: string): CloneTemplateToTra
     templateId,
   }
 }
+
+export const createTodoListFromTemplate = (templateId: string, title: string): CreateTodoListFromTemplateAction => ({
+  type: CREATE_TODO_LIST_FROM_TEMPLATE,
+  templateId,
+  title
+})

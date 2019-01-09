@@ -50,7 +50,7 @@ class App extends Component<Props> {
             <Route path="/todolisttemplate/show/:id"
                    component={TodoListTemplateShow}/>
           </Switch>
-          {JSON.stringify(this.props.transient)}
+          {JSON.stringify(this.props)}
         </div>
       </Router>
     )

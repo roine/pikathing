@@ -46,7 +46,7 @@ function TodoListTemplateForm ({onSubmit, todoListTemplate, onNameChange, onTodo
       <button type="button" onClick={addTodo}>Add Todo
       </button>
       <ul>{todoListTemplate.todos.map(
-        (todo, idx) => <li key={idx}>{todo.title} - {todo.id}</li>)}</ul>
+        (todo, idx) => <li key={idx}>{todo.name} - {todo.id}</li>)}</ul>
       <button type="submit">Save and Exit</button>
     </form>
   )

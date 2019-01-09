@@ -782,10 +782,10 @@
   resolved "https://registry.yarnpkg.com/@nodelib/fs.stat/-/fs.stat-1.1.2.tgz#54c5a964462be3d4d78af631363c18d6fa91ac26"
   integrity sha512-yprFYuno9FtNsSHVlSWd+nRlmGoAbqbeCwOryP6sC/zoCjhpArcRMYp19EvpSUSizJAlsXEwJv+wcWS9XaXdMw==
 
-"@roine/dict@^2.0.3":
-  version "2.0.3"
-  resolved "https://registry.yarnpkg.com/@roine/dict/-/dict-2.0.3.tgz#806a18761005823e9b1a92c668445ef07a20fd59"
-  integrity sha512-Vikif2I/NSfZxwi/0v4Z0O697ppsZIs1YQw9jjYyBTcv6pl0X3L1ERaUOzr+X/2mHXrG6K9SVBUt0uNHQLdWOg==
+"@roine/dict@2.0.6":
+  version "2.0.6"
+  resolved "https://registry.yarnpkg.com/@roine/dict/-/dict-2.0.6.tgz#4ed8c5f14174aafe331bbd69087e8c873afb1878"
+  integrity sha512-glK6/37C/TJ9E+Fz8tYIU852GMHIlEUSIp2t1Zx1TsbDD8Qkg1vTe9bIOAc7hR7HTSsmZGHdEUwToIZ3C4E4tA==
 
 "@svgr/core@^2.4.1":
   version "2.4.1"

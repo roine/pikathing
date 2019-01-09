@@ -27,13 +27,13 @@ class Create extends React.Component<Props> {
       updateTransientTodo({...this.props.todoListTemplate, name}))
   }
 
-  addTodo = (title) => {
-    const {id, name, todos} = this.props.todoListTemplate
+  addTodo = (name) => {
+    const {id, todos} = this.props.todoListTemplate
     this.props.dispatch(updateTransientTodo(
       {
         id,
-        name,
-        todos: [...todos, {title, completed: false, id: uuidv4()}],
+        name: this.props.todoListTemplate.name,
+        todos: [...todos, {name, id: uuidv4()}],
       }))
   }
 

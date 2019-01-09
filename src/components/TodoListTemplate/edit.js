@@ -8,6 +8,7 @@ import {
   updateTransientTodo,
 } from '../../actions'
 import uuidv4 from 'uuid/v4'
+import { Redirect } from 'react-router-dom';
 
 class Edit extends React.Component<Props> {
 
@@ -36,9 +37,8 @@ class Edit extends React.Component<Props> {
   }
 
   render () {
-
     if (!this.props.todoListTemplate) {
-      return <div>loading</div>
+      return <Redirect to={{pathname: '/', state: {alert: 'Template not found'}}}/>;
     }
 
     return (
