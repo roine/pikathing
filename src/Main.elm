@@ -8,14 +8,14 @@ import Page.Home
 import Page.Template exposing (Model(..), Msg(..))
 import Page.Template.Add
 import Route
-import Template
+import Template exposing (Template(..))
 import Url
 
 
 type Model
-    = HomePage Page.Home.Model Template.Model
-    | TemplatePage Page.Template.Model Template.Model
-    | NotFoundPage { key : Nav.Key } Template.Model
+    = HomePage Page.Home.Model Template
+    | TemplatePage Page.Template.Model Template
+    | NotFoundPage { key : Nav.Key } Template
 
 
 type alias Flags =
@@ -24,10 +24,10 @@ type alias Flags =
 
 init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url key =
-    toRoute url key []
+    toRoute url key Template.init
 
 
-toRoute : Url.Url -> Nav.Key -> Template.Model -> ( Model, Cmd Msg )
+toRoute : Url.Url -> Nav.Key -> Template -> ( Model, Cmd Msg )
 toRoute url key template =
     case Route.fromUrl url of
         Nothing ->
@@ -40,19 +40,19 @@ toRoute url key template =
             in
             ( HomePage homeModel template, Cmd.map HomeMsg cmd )
 
-        Just (Route.Template Route.Add) ->
+        Just (Route.Template subRoute) ->
             let
                 ( templateAddModel, cmd ) =
-                    Page.Template.Add.init key
+                    Page.Template.init key template subRoute
             in
-            ( TemplatePage (AddModel templateAddModel) template, Cmd.map (TemplateMsg << AddMsg) cmd )
+            ( TemplatePage templateAddModel template, Cmd.map TemplateMsg cmd )
 
 
 
 -- UPDATE
 
 
-getTemplateFromModel : Model -> Template.Model
+getTemplateFromModel : Model -> Template
 getTemplateFromModel model =
     case model of
         HomePage _ template ->
@@ -95,10 +95,10 @@ update msg model =
 
         ( TemplateMsg subMsg, TemplatePage m t ) ->
             let
-                ( newModel, cmd ) =
-                    Page.Template.update subMsg m
+                ( newTemplate, newModel, cmd ) =
+                    Page.Template.update subMsg t m
             in
-            ( TemplatePage newModel t, Cmd.map TemplateMsg cmd )
+            ( TemplatePage newModel newTemplate, Cmd.map TemplateMsg cmd )
 
         ( _, _ ) ->
             ( model, Cmd.none )
@@ -144,7 +144,7 @@ navView : Model -> Html Msg
 navView model =
     ul []
         [ li [] [ a [ href (Route.toString Route.Home) ] [ text "Home page" ] ]
-        , li [] [ a [ href (Route.toString (Route.Template Route.Add)) ] [ text "Create a template" ] ]
+        , li [] [ a [ href (Route.toString (Route.Template Route.AddPage)) ] [ text "Create a template" ] ]
         ]
 
 

@@ -2,12 +2,15 @@ module Page.Template.Add exposing (Model, Msg(..), getKey, init, update, view)
 
 import Browser.Dom as Dom
 import Browser.Navigation as Nav
+import Dict exposing (Dict)
 import Html exposing (Html, button, div, input, label, li, text, ul)
 import Html.Attributes exposing (class, disabled, id, value)
 import Html.Events exposing (onClick, onInput)
+import Random
 import Route
 import Task
-import Template
+import Template exposing (Template(..), TodoListTemplate, TodoTemplate)
+import Uuid.Barebones
 
 
 
@@ -17,25 +20,26 @@ import Template
 type alias Model =
     { key : Nav.Key
     , name : String
-    , todos : List Todo
-    , nextId : Int
-    , transient : { name : String }
+    , id : String
+    , nextTodoId : String
+    , todos : Dict String TodoTemplate
+    , transient : TodoListTemplate
     }
-
-
-type alias Todo =
-    { id : Int, name : String }
 
 
 init : Nav.Key -> ( Model, Cmd Msg )
 init key =
     ( { key = key
       , name = ""
-      , todos = [ { id = 1, name = "Color" } ]
-      , nextId = 2
+      , id = ""
+      , todos = Dict.fromList []
       , transient = { name = "" }
+      , nextTodoId = ""
       }
-    , Cmd.none
+    , Cmd.batch
+        [ Random.generate NewUIDForTodoList Uuid.Barebones.uuidStringGenerator
+        , Random.generate NewUIDForTodo Uuid.Barebones.uuidStringGenerator
+        ]
     )
 
 
@@ -48,47 +52,58 @@ type Msg
     | UpdateTransientName String
     | Add
     | Save
+    | NewUIDForTodoList String
+    | NewUIDForTodo String
     | NoOp
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+update : Msg -> Template -> Model -> ( Template, Model, Cmd Msg )
+update msg ((Template todoListTemplates todoTemplates) as templates) model =
     let
         transient =
             model.transient
     in
     case msg of
         UpdateName newName ->
-            ( { model | name = newName }, Cmd.none )
+            ( templates, { model | name = newName }, Cmd.none )
 
         UpdateTransientName newTodoName ->
-            ( { model | transient = { transient | name = newTodoName } }, Cmd.none )
+            ( templates, { model | transient = { transient | name = newTodoName } }, Cmd.none )
 
         Add ->
-            ( { model
-                | todos = { id = model.nextId, name = model.transient.name } :: model.todos
-                , nextId = model.nextId + 1
+            ( templates
+            , { model
+                | todos = Dict.insert model.nextTodoId { name = model.transient.name, templateId = model.id } model.todos
                 , transient = { transient | name = "" }
               }
-            , Task.attempt (always NoOp) (Dom.focus "todo-input")
+            , Cmd.batch [ Task.attempt (always NoOp) (Dom.focus "todo-input"), Random.generate NewUIDForTodo Uuid.Barebones.uuidStringGenerator ]
             )
 
         Save ->
-            ( model, Nav.pushUrl model.key (Route.toString Route.Home) )
+            ( Template (Dict.insert model.id { name = model.name } todoListTemplates) (Dict.union todoTemplates model.todos)
+            , model
+            , Nav.pushUrl model.key (Route.toString Route.Home)
+            )
 
         NoOp ->
-            ( model, Cmd.none )
+            ( templates, model, Cmd.none )
+
+        NewUIDForTodoList newUuid ->
+            ( templates, { model | id = newUuid }, Cmd.none )
+
+        NewUIDForTodo newUuid ->
+            ( templates, { model | nextTodoId = newUuid }, Cmd.none )
 
 
 
 -- VIEW
 
 
-view : Model -> Template.Model -> Html Msg
+view : Model -> Template -> Html Msg
 view model template =
     let
         meetPrerequisite =
-            not (String.isEmpty model.name) && not (List.isEmpty model.todos)
+            not (String.isEmpty model.name) && not (Dict.isEmpty model.todos)
     in
     div []
         [ div [ class "form-group" ]
@@ -115,7 +130,7 @@ view model template =
                     (\todo ->
                         li [] [ text todo.name ]
                     )
-                    model.todos
+                    (Dict.values model.todos)
                 )
             ]
         , button [ onClick Save, disabled (not meetPrerequisite) ] [ text "Save" ]
@@ -125,5 +140,5 @@ view model template =
 
 
 getKey : Model -> Nav.Key
-getKey model =
-    model.key
+getKey =
+    .key

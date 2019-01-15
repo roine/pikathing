@@ -2,7 +2,7 @@ module Route exposing (Page(..), SubTemplatePage(..), fromUrl, parser, toString)
 
 import Maybe exposing (Maybe(..))
 import Url
-import Url.Parser as Parser exposing ((</>), Parser, s)
+import Url.Parser as Parser exposing ((</>), Parser, int, s, string)
 
 
 type Page
@@ -11,7 +11,8 @@ type Page
 
 
 type SubTemplatePage
-    = Add
+    = AddPage
+    | EditPage String
 
 
 fromUrl : Url.Url -> Maybe Page
@@ -25,7 +26,8 @@ parser : Parser (Page -> b) b
 parser =
     Parser.oneOf
         [ Parser.map Home Parser.top
-        , Parser.map (Template Add) (s "template" </> s "add")
+        , Parser.map (Template AddPage) (s "template" </> s "add")
+        , Parser.map (Template << EditPage) (s "template" </> s "edit" </> string)
         ]
 
 
@@ -35,5 +37,8 @@ toString route =
         Home ->
             "/"
 
-        Template Add ->
+        Template AddPage ->
             "/template/add"
+
+        Template (EditPage id) ->
+            "/template/edit/" ++ id

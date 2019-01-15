@@ -1,9 +1,24 @@
-module Template exposing (Model, Template)
+module Template exposing (Template(..), TodoListTemplate, TodoTemplate, getTodoByTemplateId, init)
+
+import Dict exposing (Dict)
 
 
-type alias Model =
-    List Template
+init =
+    Template Dict.empty Dict.empty
 
 
-type alias Template =
-    { id : String, name : String }
+type Template
+    = Template (Dict String TodoListTemplate) (Dict String TodoTemplate)
+
+
+type alias TodoListTemplate =
+    { name : String }
+
+
+type alias TodoTemplate =
+    { name : String, templateId : String }
+
+
+getTodoByTemplateId : String -> Dict String TodoTemplate -> Dict String TodoTemplate
+getTodoByTemplateId id todoTemplates =
+    Dict.filter (\_ value -> id == value.templateId) todoTemplates

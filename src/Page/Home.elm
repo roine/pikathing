@@ -1,8 +1,11 @@
 module Page.Home exposing (Model, Msg(..), getKey, init, update, view)
 
 import Browser.Navigation as Nav
-import Html exposing (Html, button, div, text)
-import Template
+import Dict
+import Html exposing (Html, button, div, li, text, ul)
+import Html.Events exposing (onClick)
+import Route exposing (SubTemplatePage(..))
+import Template exposing (Template(..))
 
 
 
@@ -23,21 +26,35 @@ init key =
 
 
 type Msg
-    = NoOp
+    = Edit String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    ( model, Cmd.none )
+    case msg of
+        Edit id ->
+            ( model, Nav.pushUrl model.key (Route.toString (Route.Template (EditPage id))) )
 
 
 
 -- VIEW
 
 
-view : Model -> Template.Model -> Html Msg
-view model template =
-    div [] [ text "home page" ]
+view : Model -> Template -> Html Msg
+view model (Template todoListTemplates todoTemplates) =
+    div []
+        [ text "home page"
+        , ul []
+            (Dict.foldl
+                (\id template acc ->
+                    li [] [ text template.name, button [ onClick (Edit id) ] [ text "Edit" ] ] :: acc
+                )
+                []
+                todoListTemplates
+            )
+        , text (Debug.toString todoListTemplates)
+        , text (Debug.toString todoTemplates)
+        ]
 
 
 getKey : Model -> Nav.Key
