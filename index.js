@@ -1,5 +1,12 @@
-var local = require('./src/Main.elm');
+var { Elm } = require('./src/Main.elm')
+const key = "app"
 
-local.Elm.Main.init({
-  node: document.getElementById("elm-node")
+const storage = localStorage.getItem(key)
+const app = Elm.Main.init({
+  node: document.getElementById("elm-node"),
+  flags: storage
+})
+
+app.ports.save.subscribe(function (e) {
+  localStorage.setItem(key, e)
 })

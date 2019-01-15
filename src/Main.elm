@@ -4,12 +4,16 @@ import Browser exposing (Document)
 import Browser.Navigation as Nav
 import Html exposing (Html, a, div, li, text, ul)
 import Html.Attributes exposing (class, href)
+import Json.Decode
+import Json.Encode
 import Page.Home
 import Page.Template exposing (Model(..), Msg(..))
-import Page.Template.Add
 import Route
 import Template exposing (Template(..))
 import Url
+
+
+port save : String -> Cmd msg
 
 
 type Model
@@ -19,12 +23,38 @@ type Model
 
 
 type alias Flags =
-    ()
+    Maybe String
 
 
 init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
-init _ url key =
-    toRoute url key Template.init
+init saved url key =
+    let
+        decoder =
+            Json.Decode.field "type" Json.Decode.string
+                |> Json.Decode.andThen
+                    (\type_ ->
+                        case type_ of
+                            "Home" ->
+                                Json.Decode.map2 HomePage (Page.Home.decoder key) (Json.Decode.succeed Template.init)
+
+                            _ ->
+                                Json.Decode.fail "Unknown type"
+                    )
+
+        decoded payload =
+            Json.Decode.decodeString decoder payload
+    in
+    case saved of
+        Just encodedModel ->
+            case decoded encodedModel of
+                Ok model ->
+                    ( model, Cmd.none )
+
+                Err _ ->
+                    toRoute url key Template.init
+
+        Nothing ->
+            toRoute url key Template.init
 
 
 toRoute : Url.Url -> Nav.Key -> Template -> ( Model, Cmd Msg )
@@ -91,7 +121,7 @@ update msg model =
                 ( newModel, cmd ) =
                     Page.Home.update subMsg home
             in
-            ( HomePage newModel template, Cmd.map HomeMsg cmd )
+            ( HomePage newModel template, Cmd.batch [ Cmd.map HomeMsg cmd, save (Json.Encode.encode 0 (Page.Home.encoder newModel template)) ] )
 
         ( TemplateMsg subMsg, TemplatePage m t ) ->
             let
