@@ -1,37 +1,24 @@
 {
-  "name": "pikathing",
-  "version": "0.1.0",
-  "private": true,
+  "name": "elm-bootstrap",
+  "version": "1.0.0",
+  "description": "When starting an ELM project I always end up writing the same boilerplate and configuring the same packaging system. Elm boilerplate takes care of that for you.",
+  "main": "index.js",
   "dependencies": {
-    "@roine/dict": "2.0.6",
-    "bootstrap-sass": "^3.3.7",
-    "lodash": "^4.17.11",
-    "node-sass": "^4.9.4",
-    "react": "^16.6.0",
-    "react-dom": "^16.6.0",
-    "react-redux": "^5.1.0",
-    "react-router-dom": "^4.3.1",
-    "react-scripts": "2.1.0",
-    "redux": "^4.0.1"
+    "node-elm-compiler": "^5.0.1",
+    "parcel-bundler": "^1.10.1"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "parcel index.html"
   },
-  "eslintConfig": {
-    "extends": "react-app"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/roine/elm-bootstrap.git"
   },
-  "browserslist": [
-    ">0.2%",
-    "not dead",
-    "not ie <= 11",
-    "not op_mini all"
-  ],
-  "devDependencies": {
-    "faker": "^4.1.0",
-    "flow-bin": "^0.85.0",
-    "puppeteer": "^1.10.0"
-  }
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/roine/elm-bootstrap/issues"
+  },
+  "homepage": "https://github.com/roine/elm-bootstrap#readme"
 }
