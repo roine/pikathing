@@ -7,6 +7,17 @@ const app = Elm.Main.init({
   flags: storage
 })
 
-app.ports.save.subscribe(function (e) {
-  localStorage.setItem(key, e)
+app.ports.save.subscribe(function (data) {
+  localStorage.setItem(key, data)
+})
+
+app.ports.export_.subscribe(function () {
+  const data = localStorage.getItem(key)
+  var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(data)
+  var downloadAnchorNode = document.createElement('a')
+  downloadAnchorNode.setAttribute("href", dataStr)
+  downloadAnchorNode.setAttribute("download", "backup.json")
+  document.body.appendChild(downloadAnchorNode) // required for firefox
+  downloadAnchorNode.click()
+  downloadAnchorNode.remove()
 })

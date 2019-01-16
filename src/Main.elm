@@ -3,18 +3,25 @@ port module Main exposing (Flags, Model(..), Msg(..), bodyView, getKey, init, ma
 import ActualList exposing (ActualList(..))
 import Browser exposing (Document)
 import Browser.Navigation as Nav
-import Html exposing (Html, a, div, li, text, ul)
+import File exposing (File)
+import File.Select as Select
+import Html exposing (Html, a, button, div, li, text, ul)
 import Html.Attributes exposing (class, href)
+import Html.Events exposing (onClick)
 import Json.Decode
 import Json.Encode
 import Page.Home
 import Page.Template exposing (Model(..), Msg(..))
 import Route
+import Task
 import Template exposing (Template(..))
 import Url
 
 
 port save : String -> Cmd msg
+
+
+port export_ : () -> Cmd msg
 
 
 type Model
@@ -114,11 +121,19 @@ type Msg
     | UrlChange Url.Url
     | HomeMsg Page.Home.Msg
     | TemplateMsg Page.Template.Msg
+    | Export
+    | Loaded File
+    | Import
+    | ExtractFileContent String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case Debug.log "update" ( msg, model ) of
+    let
+        noOp =
+            ( model, Cmd.none )
+    in
+    case ( msg, model ) of
         ( UrlRequested urlRequest, _ ) ->
             case urlRequest of
                 Browser.Internal url ->
@@ -139,6 +154,9 @@ update msg model =
             , Cmd.batch [ Cmd.map HomeMsg cmd, save (encoded (Page.Home.encoder template actualList newModel)) ]
             )
 
+        ( HomeMsg subMsg, _ ) ->
+            noOp
+
         ( TemplateMsg subMsg, TemplatePage m t actualList ) ->
             let
                 updated =
@@ -151,8 +169,25 @@ update msg model =
                 ]
             )
 
-        ( _, _ ) ->
-            ( model, Cmd.none )
+        ( TemplateMsg subMsg, _ ) ->
+            noOp
+
+        ( Export, _ ) ->
+            ( model, export_ () )
+
+        ( Import, _ ) ->
+            ( model, Select.file [ "application/json" ] Loaded )
+
+        ( Loaded file, _ ) ->
+            ( model, Task.perform ExtractFileContent (File.toString file) )
+
+        ( ExtractFileContent data, _ ) ->
+            case decoded (getKey model) data of
+                Ok newModel ->
+                    ( newModel, Cmd.none )
+
+                Err _ ->
+                    noOp
 
 
 getKey : Model -> Nav.Key
@@ -213,13 +248,17 @@ bodyView model =
                 Html.map HomeMsg (Page.Home.view t tl m)
 
             TemplatePage m t tl ->
-                Html.map TemplateMsg (Page.Template.view t (Debug.log "deep" tl) m)
+                Html.map TemplateMsg (Page.Template.view t tl m)
 
             NotFoundPage _ _ _ ->
                 text "Page not found"
 
             ErrorPage error _ template _ ->
                 text (Json.Decode.errorToString error)
+        , div [ class "btn-group" ]
+            [ button [ class "btn btn-primary", onClick Import ] [ text "Import" ]
+            , button [ class "btn btn-secondary", onClick Export ] [ text "Export" ]
+            ]
         , div []
             [ text (Debug.toString model)
             ]

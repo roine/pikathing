@@ -49,7 +49,8 @@ type Msg
     | NewUIDForTodo (List String)
 
 
-update msg (Template todoLIstTemplate todoTemplate) ((ActualList todoLists todos) as actualList) model =
+update : Msg -> Template -> ActualList -> Model -> ( ActualList, Model, Cmd Msg )
+update msg (Template _ todoTemplate) ((ActualList todoLists todos) as actualList) model =
     case msg of
         UpdateName newName ->
             ( actualList, { model | name = newName }, Cmd.none )
@@ -60,7 +61,17 @@ update msg (Template todoLIstTemplate todoTemplate) ((ActualList todoLists todos
                     Dict.fromList [ ( model.id, { templateId = model.templateId, name = model.name } ) ]
 
                 newTodos =
-                    List.map2 (\( todoId, todo ) id -> ( id, { templateId = todo.templateId, completed = False, todoId = todoId } )) (Dict.toList (getTodoByTemplateId model.templateId todoTemplate)) model.nextTodoIds
+                    List.map2
+                        (\( todoId, todo ) id ->
+                            ( id
+                            , { templateId = todo.templateId
+                              , completed = False
+                              , todoId = todoId
+                              }
+                            )
+                        )
+                        (Dict.toList (getTodoByTemplateId model.templateId todoTemplate))
+                        model.nextTodoIds
                         |> Dict.fromList
             in
             ( ActualList (Dict.union newTodoList todoLists) (Dict.union newTodos todos)
