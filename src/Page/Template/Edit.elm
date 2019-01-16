@@ -1,5 +1,6 @@
 module Page.Template.Edit exposing (Model, Msg, decoder, encoder, getKey, init, update, view)
 
+import ActualList exposing (ActualList(..))
 import Browser.Navigation as Nav
 import Dict exposing (Dict)
 import Html exposing (Html, div, text)
@@ -47,8 +48,8 @@ update msg template model =
     ( template, model, Cmd.none )
 
 
-view : Model -> Template -> Html Msg
-view model template =
+view : Model -> Template -> ActualList -> Html Msg
+view model template actualList =
     div [] [ text "" ]
 
 

@@ -13,6 +13,7 @@ type Page
 type SubTemplatePage
     = AddPage
     | EditPage String
+    | ViewPage String
 
 
 fromUrl : Url.Url -> Maybe Page
@@ -28,6 +29,7 @@ parser =
         [ Parser.map Home Parser.top
         , Parser.map (Template AddPage) (s "template" </> s "add")
         , Parser.map (Template << EditPage) (s "template" </> s "edit" </> string)
+        , Parser.map (Template << ViewPage) (s "template" </> s "view" </> string)
         ]
 
 
@@ -42,3 +44,6 @@ toString route =
 
         Template (EditPage id) ->
             "/template/edit/" ++ id
+
+        Template (ViewPage id) ->
+            "/template/view/" ++ id

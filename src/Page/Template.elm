@@ -1,11 +1,13 @@
 module Page.Template exposing (Model(..), Msg(..), decoder, encoder, getKey, init, update, view)
 
+import ActualList exposing (ActualList(..))
 import Browser.Navigation as Nav
 import Html exposing (Html)
 import Json.Decode
 import Json.Encode
 import Page.Template.Add as TemplateAdd
 import Page.Template.Edit as TemplateEdit
+import Page.Template.View as TemplateView
 import Route
 import Template exposing (Template(..))
 
@@ -13,6 +15,7 @@ import Template exposing (Template(..))
 type Model
     = AddModel TemplateAdd.Model
     | EditModel TemplateEdit.Model
+    | ViewModel TemplateView.Model
 
 
 init : Nav.Key -> Template -> Route.SubTemplatePage -> ( Model, Cmd Msg )
@@ -26,6 +29,10 @@ init key template route =
             TemplateEdit.init key template id
                 |> Tuple.mapBoth EditModel (Cmd.map EditMsg)
 
+        Route.ViewPage id ->
+            TemplateView.init key id
+                |> Tuple.mapBoth ViewModel (Cmd.map ViewMsg)
+
 
 
 -- UPDATE
@@ -34,41 +41,52 @@ init key template route =
 type Msg
     = AddMsg TemplateAdd.Msg
     | EditMsg TemplateEdit.Msg
+    | ViewMsg TemplateView.Msg
 
 
-update : Msg -> Template -> Model -> ( Template, Model, Cmd Msg )
-update msg template model =
+update : Msg -> Template -> ActualList -> Model -> { template : Template, actualList : ActualList, model : Model, cmd : Cmd Msg }
+update msg template actualList model =
     case ( msg, model ) of
         ( AddMsg subMsg, AddModel m ) ->
             let
                 ( newTemplate, newModel, cmd ) =
                     TemplateAdd.update subMsg template m
             in
-            ( newTemplate, AddModel newModel, Cmd.map AddMsg cmd )
+            { template = newTemplate, actualList = actualList, model = AddModel newModel, cmd = Cmd.map AddMsg cmd }
 
         ( EditMsg subMsg, EditModel m ) ->
             let
                 ( newTemplate, newModel, cmd ) =
                     TemplateEdit.update subMsg template m
             in
-            ( newTemplate, EditModel newModel, Cmd.map EditMsg cmd )
+            { template = newTemplate, actualList = actualList, model = EditModel newModel, cmd = Cmd.map EditMsg cmd }
+
+        ( ViewMsg subMsg, ViewModel m ) ->
+            let
+                ( newActualList, newModel, cmd ) =
+                    TemplateView.update subMsg actualList m
+            in
+            { template = template, actualList = newActualList, model = ViewModel newModel, cmd = Cmd.map ViewMsg cmd }
 
         _ ->
-            ( template, model, Cmd.none )
+            { template = template, actualList = actualList, model = model, cmd = Cmd.none }
 
 
 
 -- VIEW
 
 
-view : Model -> Template -> Html Msg
-view model template =
+view : Template -> ActualList -> Model -> Html Msg
+view template actualList model =
     case model of
         AddModel m ->
-            Html.map AddMsg (TemplateAdd.view m template)
+            Html.map AddMsg (TemplateAdd.view m template actualList)
 
         EditModel m ->
-            Html.map EditMsg (TemplateEdit.view m template)
+            Html.map EditMsg (TemplateEdit.view m template actualList)
+
+        ViewModel m ->
+            Html.map ViewMsg (TemplateView.view m template actualList)
 
 
 
@@ -84,25 +102,43 @@ getKey model =
         EditModel m ->
             TemplateEdit.getKey m
 
+        ViewModel m ->
+            TemplateView.getKey m
 
-encoder : Model -> Template -> Json.Encode.Value
-encoder model template =
+
+encoder : Template -> ActualList -> Model -> Json.Encode.Value
+encoder template actualList model =
+    let
+        sharedEncoder =
+            [ ( "type", Json.Encode.string "Template" )
+            , ( "template", Template.encoder template )
+            , ( "todoList", ActualList.encoder actualList )
+            ]
+    in
     case model of
         AddModel addModel ->
-            Json.Encode.object
-                [ ( "type", Json.Encode.string "Template" )
-                , ( "subType", Json.Encode.string "Add" )
-                , ( "model", TemplateAdd.encoder addModel )
-                , ( "template", Template.encoder template )
-                ]
+            sharedEncoder
+                |> (++)
+                    [ ( "subType", Json.Encode.string "Add" )
+                    , ( "model", TemplateAdd.encoder addModel )
+                    ]
+                |> Json.Encode.object
 
         EditModel editModel ->
-            Json.Encode.object
-                [ ( "type", Json.Encode.string "Template" )
-                , ( "subType", Json.Encode.string "Edit" )
-                , ( "model", TemplateEdit.encoder editModel )
-                , ( "template", Template.encoder template )
-                ]
+            sharedEncoder
+                |> (++)
+                    [ ( "subType", Json.Encode.string "Edit" )
+                    , ( "model", TemplateEdit.encoder editModel )
+                    ]
+                |> Json.Encode.object
+
+        ViewModel viewModel ->
+            sharedEncoder
+                |> (++)
+                    [ ( "subType", Json.Encode.string "View" )
+                    , ( "model", TemplateView.encoder viewModel )
+                    ]
+                |> Json.Encode.object
 
 
 decoder : Nav.Key -> Json.Decode.Decoder Model
@@ -117,6 +153,9 @@ decoder key =
                     "Edit" ->
                         Json.Decode.map EditModel (Json.Decode.field "model" (TemplateEdit.decoder key))
 
-                    _ ->
-                        Json.Decode.fail ""
+                    "View" ->
+                        Json.Decode.map ViewModel (Json.Decode.field "model" (TemplateView.decoder key))
+
+                    otherwise ->
+                        Json.Decode.fail ("Tried decoding " ++ otherwise)
             )

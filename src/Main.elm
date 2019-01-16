@@ -1,5 +1,6 @@
 port module Main exposing (Flags, Model(..), Msg(..), bodyView, getKey, init, main, navView, subscriptions, toRoute, update, view)
 
+import ActualList exposing (ActualList(..))
 import Browser exposing (Document)
 import Browser.Navigation as Nav
 import Html exposing (Html, a, div, li, text, ul)
@@ -17,10 +18,10 @@ port save : String -> Cmd msg
 
 
 type Model
-    = HomePage Page.Home.Model Template
-    | TemplatePage Page.Template.Model Template
-    | NotFoundPage { key : Nav.Key } Template
-    | ErrorPage Json.Decode.Error Nav.Key Template
+    = HomePage Page.Home.Model Template ActualList
+    | TemplatePage Page.Template.Model Template ActualList
+    | NotFoundPage { key : Nav.Key } Template ActualList
+    | ErrorPage Json.Decode.Error Nav.Key Template ActualList
 
 
 type alias Flags =
@@ -29,42 +30,48 @@ type alias Flags =
 
 init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init saved url key =
-    let
-        decoded payload =
-            Json.Decode.decodeString (decoder key) payload
-    in
     case saved of
         Just encodedModel ->
-            case decoded encodedModel of
+            case decoded key encodedModel of
                 Ok model ->
                     ( model, Cmd.none )
 
                 Err err ->
-                    ( ErrorPage err key Template.init, Cmd.none )
+                    ( ErrorPage err key Template.init ActualList.init, Cmd.none )
 
         Nothing ->
-            toRoute url key Template.init
+            toRoute url key Template.init ActualList.init
 
 
-toRoute : Url.Url -> Nav.Key -> Template -> ( Model, Cmd Msg )
-toRoute url key template =
+toRoute : Url.Url -> Nav.Key -> Template -> ActualList -> ( Model, Cmd Msg )
+toRoute url key template actualList =
     case Route.fromUrl url of
         Nothing ->
-            ( NotFoundPage { key = key } template, Cmd.none )
+            ( NotFoundPage { key = key } template actualList, Cmd.none )
 
         Just Route.Home ->
             let
                 ( homeModel, cmd ) =
                     Page.Home.init key
             in
-            ( HomePage homeModel template, Cmd.batch [ Cmd.map HomeMsg cmd, save (Json.Encode.encode 0 (Page.Home.encoder homeModel template)) ] )
+            ( HomePage homeModel template actualList
+            , Cmd.batch
+                [ Cmd.map HomeMsg cmd
+                , save (encoded (Page.Home.encoder template actualList homeModel))
+                ]
+            )
 
         Just (Route.Template subRoute) ->
             let
                 ( templateModel, cmd ) =
                     Page.Template.init key template subRoute
             in
-            ( TemplatePage templateModel template, Cmd.batch [ Cmd.map TemplateMsg cmd, save (Json.Encode.encode 0 (Page.Template.encoder templateModel template)) ] )
+            ( TemplatePage templateModel template actualList
+            , Cmd.batch
+                [ Cmd.map TemplateMsg cmd
+                , save (encoded (Page.Template.encoder template actualList templateModel))
+                ]
+            )
 
 
 
@@ -74,17 +81,32 @@ toRoute url key template =
 getTemplateFromModel : Model -> Template
 getTemplateFromModel model =
     case model of
-        HomePage _ template ->
+        HomePage _ template _ ->
             template
 
-        TemplatePage _ template ->
+        TemplatePage _ template _ ->
             template
 
-        NotFoundPage _ template ->
+        NotFoundPage _ template _ ->
             template
 
-        ErrorPage error key template ->
+        ErrorPage error key template _ ->
             template
+
+
+getActualListFromModel model =
+    case model of
+        HomePage _ _ actualList ->
+            actualList
+
+        TemplatePage _ _ actualList ->
+            actualList
+
+        NotFoundPage _ _ actualList ->
+            actualList
+
+        ErrorPage error key _ actualList ->
+            actualList
 
 
 type Msg
@@ -106,21 +128,28 @@ update msg model =
                     ( model, Nav.load href )
 
         ( UrlChange url, _ ) ->
-            toRoute url (getKey model) (getTemplateFromModel model)
+            toRoute url (getKey model) (getTemplateFromModel model) (getActualListFromModel model)
 
-        ( HomeMsg subMsg, HomePage home template ) ->
+        ( HomeMsg subMsg, HomePage home template actualList ) ->
             let
                 ( newModel, cmd ) =
                     Page.Home.update subMsg home
             in
-            ( HomePage newModel template, Cmd.batch [ Cmd.map HomeMsg cmd, save (Json.Encode.encode 0 (Page.Home.encoder newModel template)) ] )
+            ( HomePage newModel template actualList
+            , Cmd.batch [ Cmd.map HomeMsg cmd, save (encoded (Page.Home.encoder template actualList newModel)) ]
+            )
 
-        ( TemplateMsg subMsg, TemplatePage m t ) ->
+        ( TemplateMsg subMsg, TemplatePage m t actualList ) ->
             let
-                ( newTemplate, newModel, cmd ) =
-                    Page.Template.update subMsg t m
+                updated =
+                    Page.Template.update subMsg t actualList m
             in
-            ( TemplatePage newModel newTemplate, Cmd.batch [ Cmd.map TemplateMsg cmd, save (Json.Encode.encode 0 (Page.Template.encoder newModel newTemplate)) ] )
+            ( TemplatePage updated.model updated.template updated.actualList
+            , Cmd.batch
+                [ Cmd.map TemplateMsg updated.cmd
+                , save (encoded (Page.Template.encoder updated.template actualList updated.model))
+                ]
+            )
 
         ( _, _ ) ->
             ( model, Cmd.none )
@@ -129,16 +158,16 @@ update msg model =
 getKey : Model -> Nav.Key
 getKey model =
     case model of
-        HomePage m _ ->
+        HomePage m _ _ ->
             Page.Home.getKey m
 
-        NotFoundPage m _ ->
+        NotFoundPage m _ _ ->
             m.key
 
-        TemplatePage m _ ->
+        TemplatePage m _ _ ->
             Page.Template.getKey m
 
-        ErrorPage error key template ->
+        ErrorPage error key template _ ->
             key
 
 
@@ -150,16 +179,16 @@ view : Model -> Document Msg
 view model =
     { title =
         case model of
-            HomePage _ _ ->
+            HomePage _ _ _ ->
                 "Homepage"
 
-            TemplatePage _ _ ->
+            TemplatePage _ _ _ ->
                 "Template"
 
-            NotFoundPage _ _ ->
+            NotFoundPage _ _ _ ->
                 "Not Found"
 
-            ErrorPage _ _ _ ->
+            ErrorPage _ _ _ _ ->
                 ""
     , body =
         [ navView model
@@ -180,17 +209,20 @@ bodyView : Model -> Html Msg
 bodyView model =
     div [ class "container" ]
         [ case model of
-            HomePage m t ->
-                Html.map HomeMsg (Page.Home.view m t)
+            HomePage m t tl ->
+                Html.map HomeMsg (Page.Home.view t tl m)
 
-            TemplatePage m t ->
-                Html.map TemplateMsg (Page.Template.view m t)
+            TemplatePage m t tl ->
+                Html.map TemplateMsg (Page.Template.view t tl m)
 
-            NotFoundPage _ _ ->
+            NotFoundPage _ _ _ ->
                 text "Page not found"
 
-            ErrorPage error _ template ->
+            ErrorPage error _ template _ ->
                 text (Json.Decode.errorToString error)
+        , div []
+            [ text (Debug.toString model)
+            ]
         ]
 
 
@@ -207,6 +239,10 @@ subscriptions model =
 -- INIT
 
 
+decoded key payload =
+    Json.Decode.decodeString (decoder key) payload
+
+
 decoder : Nav.Key -> Json.Decode.Decoder Model
 decoder key =
     Json.Decode.field "type" Json.Decode.string
@@ -214,18 +250,24 @@ decoder key =
             (\type_ ->
                 case type_ of
                     "Home" ->
-                        Json.Decode.map2 HomePage
+                        Json.Decode.map3 HomePage
                             (Page.Home.decoder key)
                             (Json.Decode.field "template" Template.decoder)
+                            (Json.Decode.field "todoList" ActualList.decoder)
 
                     "Template" ->
-                        Json.Decode.map2 TemplatePage
+                        Json.Decode.map3 TemplatePage
                             (Page.Template.decoder key)
                             (Json.Decode.field "template" Template.decoder)
+                            (Json.Decode.field "todoList" ActualList.decoder)
 
                     _ ->
                         Json.Decode.fail "Unknown type"
             )
+
+
+encoded =
+    Json.Encode.encode 0
 
 
 main : Program Flags Model Msg

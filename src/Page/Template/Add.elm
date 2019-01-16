@@ -1,10 +1,11 @@
 module Page.Template.Add exposing (Model, Msg(..), decoder, encoder, getKey, init, update, view)
 
+import ActualList exposing (ActualList(..))
 import Browser.Dom as Dom
 import Browser.Navigation as Nav
 import Dict exposing (Dict)
 import Html exposing (Html, button, div, input, label, li, text, ul)
-import Html.Attributes exposing (class, disabled, id, value)
+import Html.Attributes exposing (class, disabled, id, placeholder, type_, value)
 import Html.Events exposing (on, onClick, onInput)
 import Json.Decode
 import Json.Encode
@@ -56,6 +57,7 @@ type Msg
     | Save
     | NewUIDForTodoList String
     | NewUIDForTodo String
+    | Cancel
     | NoOp
 
 
@@ -96,13 +98,19 @@ update msg ((Template todoListTemplates todoTemplates) as templates) model =
         NewUIDForTodo newUuid ->
             ( templates, { model | nextTodoId = newUuid }, Cmd.none )
 
+        Cancel ->
+            ( templates
+            , model
+            , Nav.back model.key 1
+            )
+
 
 
 -- VIEW
 
 
-view : Model -> Template -> Html Msg
-view model template =
+view : Model -> Template -> ActualList -> Html Msg
+view model template actualList =
     let
         meetPrerequisite =
             not (String.isEmpty model.name) && not (Dict.isEmpty model.todos)
@@ -121,37 +129,52 @@ view model template =
                 )
     in
     div []
-        [ div [ class "form-group" ]
-            [ label [] [ text "Template name" ]
-            , input
-                [ value model.name
-                , class "form-control"
-                , onInput UpdateName
+        [ div [ class "form-inline" ]
+            [ div [ class "form-group" ]
+                [ label [ class "sr-only" ] [ text "Template name" ]
+                , input
+                    [ value model.name
+                    , class "form-control"
+                    , onInput UpdateName
+                    , placeholder "Template Name"
+                    ]
+                    []
                 ]
-                []
             ]
-        , div [ class "from-group" ]
-            [ label [] [ text "Todo" ]
-            , input
-                [ value model.transient.name
-                , class "form-control"
-                , onInput UpdateTransientName
-                , onEnter Add
-                , id "todo-input"
+        , div [ class "form-inline" ]
+            [ div [ class "form-group" ]
+                [ label [ class "sr-only" ] [ text "Todo" ]
+                , input
+                    [ value model.transient.name
+                    , class "form-control"
+                    , onInput UpdateTransientName
+                    , onEnter Add
+                    , id "todo-input"
+                    , placeholder "Todo"
+                    ]
+                    []
+                , button [ onClick Add, class "btn btn-primary", type_ "button" ] [ text "Add Todo" ]
                 ]
-                []
-            , button [ onClick Add, class "btn btn-primary" ] [ text "Add Todo" ]
-            , ul []
-                (List.map
-                    (\todo ->
-                        li [] [ text todo.name ]
-                    )
-                    (Dict.values model.todos)
+            ]
+        , ul []
+            (List.map
+                (\todo ->
+                    li [] [ text todo.name ]
                 )
+                (Dict.values model.todos)
+            )
+        , div [ class "row" ]
+            [ div [ class "col-sm-6" ] [ button [ onClick Cancel, class "btn btn-danger", type_ "button" ] [ text "Cancel" ] ]
+            , div [ class "col-sm-6 text-right" ]
+                [ button
+                    [ onClick Save
+                    , disabled (not meetPrerequisite)
+                    , class "btn btn-success"
+                    , type_ "button"
+                    ]
+                    [ text "Save" ]
+                ]
             ]
-        , button [ onClick Save, disabled (not meetPrerequisite), class "btn btn-secondary" ] [ text "Save" ]
-        , text (Debug.toString template)
-        , text (Debug.toString model)
         ]
 
 
