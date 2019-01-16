@@ -5,7 +5,7 @@ import Browser.Navigation as Nav
 import Dict exposing (Dict)
 import Html exposing (Html, button, div, input, label, li, text, ul)
 import Html.Attributes exposing (class, disabled, id, value)
-import Html.Events exposing (onClick, onInput)
+import Html.Events exposing (on, onClick, onInput)
 import Json.Decode
 import Json.Encode
 import Random
@@ -106,6 +106,19 @@ view model template =
     let
         meetPrerequisite =
             not (String.isEmpty model.name) && not (Dict.isEmpty model.todos)
+
+        onEnter tagger =
+            on "keydown"
+                (Json.Decode.field "key" Json.Decode.string
+                    |> Json.Decode.andThen
+                        (\key ->
+                            if key == "Enter" then
+                                Json.Decode.succeed tagger
+
+                            else
+                                Json.Decode.fail "Other than Enter"
+                        )
+                )
     in
     div []
         [ div [ class "form-group" ]
@@ -123,10 +136,11 @@ view model template =
                 [ value model.transient.name
                 , class "form-control"
                 , onInput UpdateTransientName
+                , onEnter Add
                 , id "todo-input"
                 ]
                 []
-            , button [ onClick Add ] [ text "Add Todo" ]
+            , button [ onClick Add, class "btn btn-primary" ] [ text "Add Todo" ]
             , ul []
                 (List.map
                     (\todo ->
@@ -135,7 +149,7 @@ view model template =
                     (Dict.values model.todos)
                 )
             ]
-        , button [ onClick Save, disabled (not meetPrerequisite) ] [ text "Save" ]
+        , button [ onClick Save, disabled (not meetPrerequisite), class "btn btn-secondary" ] [ text "Save" ]
         , text (Debug.toString template)
         , text (Debug.toString model)
         ]
