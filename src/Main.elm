@@ -20,6 +20,7 @@ type Model
     = HomePage Page.Home.Model Template
     | TemplatePage Page.Template.Model Template
     | NotFoundPage { key : Nav.Key } Template
+    | ErrorPage Json.Decode.Error Nav.Key Template
 
 
 type alias Flags =
@@ -29,20 +30,8 @@ type alias Flags =
 init : Flags -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init saved url key =
     let
-        decoder =
-            Json.Decode.field "type" Json.Decode.string
-                |> Json.Decode.andThen
-                    (\type_ ->
-                        case type_ of
-                            "Home" ->
-                                Json.Decode.map2 HomePage (Page.Home.decoder key) (Json.Decode.succeed Template.init)
-
-                            _ ->
-                                Json.Decode.fail "Unknown type"
-                    )
-
         decoded payload =
-            Json.Decode.decodeString decoder payload
+            Json.Decode.decodeString (decoder key) payload
     in
     case saved of
         Just encodedModel ->
@@ -50,8 +39,8 @@ init saved url key =
                 Ok model ->
                     ( model, Cmd.none )
 
-                Err _ ->
-                    toRoute url key Template.init
+                Err err ->
+                    ( ErrorPage err key Template.init, Cmd.none )
 
         Nothing ->
             toRoute url key Template.init
@@ -68,14 +57,14 @@ toRoute url key template =
                 ( homeModel, cmd ) =
                     Page.Home.init key
             in
-            ( HomePage homeModel template, Cmd.map HomeMsg cmd )
+            ( HomePage homeModel template, Cmd.batch [ Cmd.map HomeMsg cmd, save (Json.Encode.encode 0 (Page.Home.encoder homeModel template)) ] )
 
         Just (Route.Template subRoute) ->
             let
-                ( templateAddModel, cmd ) =
+                ( templateModel, cmd ) =
                     Page.Template.init key template subRoute
             in
-            ( TemplatePage templateAddModel template, Cmd.map TemplateMsg cmd )
+            ( TemplatePage templateModel template, Cmd.batch [ Cmd.map TemplateMsg cmd, save (Json.Encode.encode 0 (Page.Template.encoder templateModel template)) ] )
 
 
 
@@ -94,6 +83,9 @@ getTemplateFromModel model =
         NotFoundPage _ template ->
             template
 
+        ErrorPage error key template ->
+            template
+
 
 type Msg
     = UrlRequested Browser.UrlRequest
@@ -104,7 +96,7 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case ( msg, model ) of
+    case Debug.log "update" ( msg, model ) of
         ( UrlRequested urlRequest, _ ) ->
             case urlRequest of
                 Browser.Internal url ->
@@ -128,7 +120,7 @@ update msg model =
                 ( newTemplate, newModel, cmd ) =
                     Page.Template.update subMsg t m
             in
-            ( TemplatePage newModel newTemplate, Cmd.map TemplateMsg cmd )
+            ( TemplatePage newModel newTemplate, Cmd.batch [ Cmd.map TemplateMsg cmd, save (Json.Encode.encode 0 (Page.Template.encoder newModel newTemplate)) ] )
 
         ( _, _ ) ->
             ( model, Cmd.none )
@@ -145,6 +137,9 @@ getKey model =
 
         TemplatePage m _ ->
             Page.Template.getKey m
+
+        ErrorPage error key template ->
+            key
 
 
 
@@ -163,6 +158,9 @@ view model =
 
             NotFoundPage _ _ ->
                 "Not Found"
+
+            ErrorPage _ _ _ ->
+                ""
     , body =
         [ navView model
         , bodyView model
@@ -190,6 +188,9 @@ bodyView model =
 
             NotFoundPage _ _ ->
                 text "Page not found"
+
+            ErrorPage error _ template ->
+                text (Json.Decode.errorToString error)
         ]
 
 
@@ -204,6 +205,27 @@ subscriptions model =
 
 
 -- INIT
+
+
+decoder : Nav.Key -> Json.Decode.Decoder Model
+decoder key =
+    Json.Decode.field "type" Json.Decode.string
+        |> Json.Decode.andThen
+            (\type_ ->
+                case type_ of
+                    "Home" ->
+                        Json.Decode.map2 HomePage
+                            (Page.Home.decoder key)
+                            (Json.Decode.field "template" Template.decoder)
+
+                    "Template" ->
+                        Json.Decode.map2 TemplatePage
+                            (Page.Template.decoder key)
+                            (Json.Decode.field "template" Template.decoder)
+
+                    _ ->
+                        Json.Decode.fail "Unknown type"
+            )
 
 
 main : Program Flags Model Msg

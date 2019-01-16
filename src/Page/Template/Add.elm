@@ -1,4 +1,4 @@
-module Page.Template.Add exposing (Model, Msg(..), getKey, init, update, view)
+module Page.Template.Add exposing (Model, Msg(..), decoder, encoder, getKey, init, update, view)
 
 import Browser.Dom as Dom
 import Browser.Navigation as Nav
@@ -6,6 +6,8 @@ import Dict exposing (Dict)
 import Html exposing (Html, button, div, input, label, li, text, ul)
 import Html.Attributes exposing (class, disabled, id, value)
 import Html.Events exposing (onClick, onInput)
+import Json.Decode
+import Json.Encode
 import Random
 import Route
 import Task
@@ -23,7 +25,7 @@ type alias Model =
     , id : String
     , nextTodoId : String
     , todos : Dict String TodoTemplate
-    , transient : TodoListTemplate
+    , transient : { name : String }
     }
 
 
@@ -139,6 +141,45 @@ view model template =
         ]
 
 
+
+-- MISC
+
+
 getKey : Model -> Nav.Key
 getKey =
     .key
+
+
+encoder : Model -> Json.Encode.Value
+encoder model =
+    Json.Encode.object
+        [ ( "name", Json.Encode.string model.name )
+        , ( "id", Json.Encode.string model.id )
+        , ( "nextTodoId", Json.Encode.string model.nextTodoId )
+        , ( "todos"
+          , Json.Encode.dict identity
+                (\{ name, templateId } ->
+                    Json.Encode.object [ ( "name", Json.Encode.string name ), ( "templateId", Json.Encode.string templateId ) ]
+                )
+                model.todos
+          )
+        , ( "transient", Json.Encode.object [ ( "name", Json.Encode.string model.transient.name ) ] )
+        ]
+
+
+decoder : Nav.Key -> Json.Decode.Decoder Model
+decoder key =
+    Json.Decode.map6 Model
+        (Json.Decode.succeed key)
+        (Json.Decode.field "name" Json.Decode.string)
+        (Json.Decode.field "id" Json.Decode.string)
+        (Json.Decode.field "nextTodoId" Json.Decode.string)
+        (Json.Decode.field "todos"
+            (Json.Decode.dict
+                (Json.Decode.map2 TodoTemplate
+                    (Json.Decode.field "name" Json.Decode.string)
+                    (Json.Decode.field "templateId" Json.Decode.string)
+                )
+            )
+        )
+        (Json.Decode.field "transient" (Json.Decode.map (\name -> { name = name }) (Json.Decode.field "name" Json.Decode.string)))

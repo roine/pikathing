@@ -1,7 +1,9 @@
-module Page.Template exposing (Model(..), Msg(..), getKey, init, update, view)
+module Page.Template exposing (Model(..), Msg(..), decoder, encoder, getKey, init, update, view)
 
 import Browser.Navigation as Nav
-import Html
+import Html exposing (Html)
+import Json.Decode
+import Json.Encode
 import Page.Template.Add as TemplateAdd
 import Page.Template.Edit as TemplateEdit
 import Route
@@ -34,6 +36,7 @@ type Msg
     | EditMsg TemplateEdit.Msg
 
 
+update : Msg -> Template -> Model -> ( Template, Model, Cmd Msg )
 update msg template model =
     case ( msg, model ) of
         ( AddMsg subMsg, AddModel m ) ->
@@ -58,6 +61,7 @@ update msg template model =
 -- VIEW
 
 
+view : Model -> Template -> Html Msg
 view model template =
     case model of
         AddModel m ->
@@ -79,3 +83,40 @@ getKey model =
 
         EditModel m ->
             TemplateEdit.getKey m
+
+
+encoder : Model -> Template -> Json.Encode.Value
+encoder model template =
+    case model of
+        AddModel addModel ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "Template" )
+                , ( "subType", Json.Encode.string "Add" )
+                , ( "model", TemplateAdd.encoder addModel )
+                , ( "template", Template.encoder template )
+                ]
+
+        EditModel editModel ->
+            Json.Encode.object
+                [ ( "type", Json.Encode.string "Template" )
+                , ( "subType", Json.Encode.string "Edit" )
+                , ( "model", TemplateEdit.encoder editModel )
+                , ( "template", Template.encoder template )
+                ]
+
+
+decoder : Nav.Key -> Json.Decode.Decoder Model
+decoder key =
+    Json.Decode.field "subType" Json.Decode.string
+        |> Json.Decode.andThen
+            (\type_ ->
+                case type_ of
+                    "Add" ->
+                        Json.Decode.map AddModel (Json.Decode.field "model" (TemplateAdd.decoder key))
+
+                    "Edit" ->
+                        Json.Decode.map EditModel (Json.Decode.field "model" (TemplateEdit.decoder key))
+
+                    _ ->
+                        Json.Decode.fail ""
+            )

@@ -75,7 +75,7 @@ getKey model =
 
 encoder : Model -> Template -> Json.Encode.Value
 encoder model template =
-    Json.Encode.object [ ( "type", Json.Encode.string "Home" ), ( "model", Json.Encode.null ) ]
+    Json.Encode.object [ ( "type", Json.Encode.string "Home" ), ( "model", Json.Encode.null ), ( "template", Template.encoder template ) ]
 
 
 decoder : Nav.Key -> Json.Decode.Decoder Model
