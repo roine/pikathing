@@ -65,8 +65,6 @@ view (Template todoListTemplates todoTemplates) (ActualList todoList todo) model
                 []
                 todoListTemplates
             )
-        , text (Debug.toString todoListTemplates)
-        , text (Debug.toString todoTemplates)
         ]
 
 

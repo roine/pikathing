@@ -109,8 +109,8 @@ update msg ((Template todoListTemplates todoTemplates) as templates) model =
 -- VIEW
 
 
-view : Model -> Template -> ActualList -> Html Msg
-view model template actualList =
+view : Template -> ActualList -> Model -> Html Msg
+view template actualList model =
     let
         meetPrerequisite =
             not (String.isEmpty model.name) && not (Dict.isEmpty model.todos)

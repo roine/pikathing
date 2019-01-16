@@ -213,7 +213,7 @@ bodyView model =
                 Html.map HomeMsg (Page.Home.view t tl m)
 
             TemplatePage m t tl ->
-                Html.map TemplateMsg (Page.Template.view t tl m)
+                Html.map TemplateMsg (Page.Template.view t (Debug.log "deep" tl) m)
 
             NotFoundPage _ _ _ ->
                 text "Page not found"

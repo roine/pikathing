@@ -31,7 +31,7 @@ initialTodoTemplate =
     { name = "", templateId = "" }
 
 
-getTodoByTemplateId : String -> Dict String TodoTemplate -> Dict String TodoTemplate
+getTodoByTemplateId : String -> Dict String { a | templateId : String } -> Dict String { a | templateId : String }
 getTodoByTemplateId id todoTemplates =
     Dict.filter (\_ value -> id == value.templateId) todoTemplates
 

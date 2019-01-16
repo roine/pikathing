@@ -30,7 +30,7 @@ init key template route =
                 |> Tuple.mapBoth EditModel (Cmd.map EditMsg)
 
         Route.ViewPage id ->
-            TemplateView.init key id
+            TemplateView.init key id template
                 |> Tuple.mapBoth ViewModel (Cmd.map ViewMsg)
 
 
@@ -64,7 +64,7 @@ update msg template actualList model =
         ( ViewMsg subMsg, ViewModel m ) ->
             let
                 ( newActualList, newModel, cmd ) =
-                    TemplateView.update subMsg actualList m
+                    TemplateView.update subMsg template actualList m
             in
             { template = template, actualList = newActualList, model = ViewModel newModel, cmd = Cmd.map ViewMsg cmd }
 
@@ -80,13 +80,13 @@ view : Template -> ActualList -> Model -> Html Msg
 view template actualList model =
     case model of
         AddModel m ->
-            Html.map AddMsg (TemplateAdd.view m template actualList)
+            Html.map AddMsg (TemplateAdd.view template actualList m)
 
         EditModel m ->
-            Html.map EditMsg (TemplateEdit.view m template actualList)
+            Html.map EditMsg (TemplateEdit.view template actualList m)
 
         ViewModel m ->
-            Html.map ViewMsg (TemplateView.view m template actualList)
+            Html.map ViewMsg (TemplateView.view template actualList m)
 
 
 

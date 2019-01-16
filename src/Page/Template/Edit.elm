@@ -48,8 +48,8 @@ update msg template model =
     ( template, model, Cmd.none )
 
 
-view : Model -> Template -> ActualList -> Html Msg
-view model template actualList =
+view : Template -> ActualList -> Model -> Html Msg
+view template actualList model =
     div [] [ text "" ]
 
 
