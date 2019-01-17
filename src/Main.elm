@@ -203,7 +203,7 @@ update msg model =
             ( TodoListPage updated.model updated.template updated.actualList
             , Cmd.batch
                 [ Cmd.map TodoListMsg updated.cmd
-                , save (encoded (Page.TodoList.encoder updated.template actualList updated.model))
+                , save (encoded (Page.TodoList.encoder updated.template updated.actualList updated.model))
                 ]
             )
 

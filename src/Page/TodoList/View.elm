@@ -3,8 +3,9 @@ module Page.TodoList.View exposing (Model, Msg, decoder, encoder, getKey, init, 
 import ActualList exposing (ActualList(..))
 import Browser.Navigation as Nav
 import Dict
-import Html exposing (a, div, h1, h2, input, label, li, span, text, ul)
+import Html exposing (Html, a, div, h1, h2, input, label, li, span, text, ul)
 import Html.Attributes exposing (checked, class, href, type_)
+import Html.Events exposing (onCheck)
 import Json.Decode
 import Json.Encode
 import Route
@@ -28,17 +29,21 @@ init key id template =
 
 
 type Msg
-    = NoOp
+    = Toggle String Bool
 
 
-update msg template actualList model =
-    ( actualList, model, Cmd.none )
+update : Msg -> Template -> ActualList -> Model -> ( ActualList, Model, Cmd Msg )
+update msg template (ActualList todoLists todos) model =
+    case msg of
+        Toggle key checked ->
+            ( ActualList todoLists (Dict.update key (\maybeTodo -> Maybe.map (\todo -> { todo | completed = checked }) maybeTodo) todos), model, Cmd.none )
 
 
 
 -- VIEW
 
 
+view : Template -> ActualList -> Model -> Html Msg
 view (Template todoListTemplates todoTemplates) (ActualList todoLists todos) { id } =
     let
         allData =
@@ -50,7 +55,6 @@ view (Template todoListTemplates todoTemplates) (ActualList todoLists todos) { i
                         , templateName = Maybe.map .name (Dict.get templateId todoListTemplates) |> Maybe.withDefault ""
                         , todos =
                             getTodoByTemplateId id todos
-                                |> Debug.log "todos"
                                 |> Dict.map
                                     (\id_ { completed, todoId } ->
                                         { name = Dict.get todoId todoTemplates |> Maybe.map .name |> Maybe.withDefault ""
@@ -59,7 +63,6 @@ view (Template todoListTemplates todoTemplates) (ActualList todoLists todos) { i
                                     )
                         }
                     )
-                |> Debug.log "dsd"
     in
     div []
         (case allData of
@@ -77,10 +80,17 @@ view (Template todoListTemplates todoTemplates) (ActualList todoLists todos) { i
                     ]
                 , ul [ class "list-unstyled" ]
                     (List.map
-                        (\todo ->
-                            li [] [ label [] [ span [] [ input [ type_ "checkbox", class "mr-2", checked todo.completed ] [], span [] [ text todo.name ] ] ] ]
+                        (\( id_, todo ) ->
+                            li []
+                                [ label []
+                                    [ span []
+                                        [ input [ type_ "checkbox", class "mr-2", checked todo.completed, onCheck (Toggle id_) ] []
+                                        ]
+                                    , span [] [ text todo.name ]
+                                    ]
+                                ]
                         )
-                        (Dict.values list.todos)
+                        (Dict.toList list.todos)
                     )
                 ]
         )
@@ -90,10 +100,12 @@ view (Template todoListTemplates todoTemplates) (ActualList todoLists todos) { i
 -- MISC
 
 
+getKey : Model -> Nav.Key
 getKey =
     .key
 
 
+encoder : Model -> Json.Encode.Value
 encoder model =
     Json.Encode.object [ ( "id", Json.Encode.string model.id ) ]
 
