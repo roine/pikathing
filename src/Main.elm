@@ -1,12 +1,13 @@
-port module Main exposing (Flags, Model(..), Msg(..), bodyView, getKey, init, main, navView, subscriptions, toRoute, update, view)
+port module Main exposing (Flags, Model(..), Msg(..), bodyView, getKey, init, main, subscriptions, toRoute, update, view)
 
 import ActualList exposing (ActualList(..))
 import Browser exposing (Document)
 import Browser.Navigation as Nav
+import Debug.Extra
 import File exposing (File)
 import File.Select as Select
-import Html exposing (Html, a, button, div, li, text, ul)
-import Html.Attributes exposing (class, href)
+import Html exposing (Html, a, button, code, div, h1, li, p, pre, text, ul)
+import Html.Attributes exposing (class, href, style)
 import Html.Events exposing (onClick)
 import Json.Decode
 import Json.Encode
@@ -228,15 +229,14 @@ view model =
     , body =
         [ navView model
         , bodyView model
+        , div [ class "container" ] [ Debug.Extra.viewModel model ]
         ]
     }
 
 
-navView : Model -> Html Msg
 navView model =
-    ul []
-        [ li [] [ a [ href (Route.toString Route.Home) ] [ text "Home page" ] ]
-        , li [] [ a [ href (Route.toString (Route.Template Route.AddPage)) ] [ text "Create a template" ] ]
+    div [ class "container" ]
+        [ h1 [] [ a [ href (Route.toString Route.Home) ] [ text "Flute" ] ]
         ]
 
 
@@ -258,9 +258,6 @@ bodyView model =
         , div [ class "btn-group" ]
             [ button [ class "btn btn-primary", onClick Import ] [ text "Import" ]
             , button [ class "btn btn-secondary", onClick Export ] [ text "Export" ]
-            ]
-        , div []
-            [ text (Debug.toString model)
             ]
         ]
 

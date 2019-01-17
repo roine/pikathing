@@ -3,8 +3,8 @@ module Page.Template.View exposing (Model, Msg, decoder, encoder, getKey, init, 
 import ActualList exposing (ActualList(..))
 import Browser.Navigation as Nav
 import Dict exposing (Dict)
-import Html exposing (Html, button, div, input, li, text, ul)
-import Html.Attributes exposing (value)
+import Html exposing (Html, button, div, input, label, li, text, ul)
+import Html.Attributes exposing (class, placeholder, value)
 import Html.Events exposing (onClick, onInput)
 import Json.Decode
 import Json.Encode
@@ -93,8 +93,13 @@ view template (ActualList todoLists todos) model =
             getTodoByTemplateId model.templateId todoLists
     in
     div []
-        [ input [ onInput UpdateName, value model.name ] []
-        , button [ onClick MakeCopy ] [ text "Make a new copy" ]
+        [ div [ class "form-row align-items-center" ]
+            [ div [ class "col-auto" ]
+                [ label [ class "sr-only" ] [ text "Name" ]
+                , input [ onInput UpdateName, value model.name, class "form-control", placeholder "Name of the copy, eg: Porsche" ] []
+                ]
+            , div [ class "col-auto" ] [ button [ onClick MakeCopy, class "btn btn-primary" ] [ text "Make a new copy" ] ]
+            ]
         , ul [] (List.map (\todoList -> li [] [ text todoList.name ]) (Dict.values currentTodoLists))
         ]
 

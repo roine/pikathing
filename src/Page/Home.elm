@@ -3,13 +3,13 @@ module Page.Home exposing (Model, Msg(..), decoder, encoder, getKey, init, updat
 import ActualList exposing (ActualList(..))
 import Browser.Navigation as Nav
 import Dict
-import Html exposing (Html, button, div, li, text, ul)
-import Html.Attributes exposing (class)
+import Html exposing (Html, a, button, div, i, li, text, ul)
+import Html.Attributes exposing (class, href)
 import Html.Events exposing (onClick)
 import Json.Decode
 import Json.Encode
 import Route exposing (SubTemplatePage(..))
-import Template exposing (Template(..))
+import Template exposing (Template(..), getTodoByTemplateId)
 
 
 
@@ -51,12 +51,15 @@ update msg model =
 view : Template -> ActualList -> Model -> Html Msg
 view (Template todoListTemplates todoTemplates) (ActualList todoList todo) model =
     div []
-        [ text "home page"
-        , ul []
+        [ ul []
             (Dict.foldl
                 (\id template acc ->
+                    let
+                        copyCount =
+                            getTodoByTemplateId id todoList |> Dict.size
+                    in
                     li []
-                        [ text template.name
+                        [ text (template.name ++ "(" ++ String.fromInt copyCount ++ ")")
                         , button [ onClick (Edit id), class "btn btn-link" ] [ text "Edit" ]
                         , button [ onClick (View id), class "btn btn-link" ] [ text "View " ]
                         ]
@@ -65,6 +68,7 @@ view (Template todoListTemplates todoTemplates) (ActualList todoList todo) model
                 []
                 todoListTemplates
             )
+        , a [ href (Route.toString (Route.Template Route.AddPage)) ] [ i [ class "fa fa-plus-circle fa-3x" ] [] ]
         ]
 
 
