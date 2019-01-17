@@ -1,4 +1,4 @@
-module Route exposing (Page(..), SubTemplatePage(..), fromUrl, parser, toString)
+module Route exposing (CrudPage(..), Page(..), fromUrl, parser, toString)
 
 import Maybe exposing (Maybe(..))
 import Url
@@ -7,10 +7,11 @@ import Url.Parser as Parser exposing ((</>), Parser, int, s, string)
 
 type Page
     = Home
-    | Template SubTemplatePage
+    | Template CrudPage
+    | TodoList CrudPage
 
 
-type SubTemplatePage
+type CrudPage
     = AddPage
     | EditPage String
     | ViewPage String
@@ -30,6 +31,7 @@ parser =
         , Parser.map (Template AddPage) (s "template" </> s "add")
         , Parser.map (Template << EditPage) (s "template" </> s "edit" </> string)
         , Parser.map (Template << ViewPage) (s "template" </> s "view" </> string)
+        , Parser.map (TodoList << ViewPage) (s "todolist" </> s "view" </> string)
         ]
 
 
@@ -47,3 +49,9 @@ toString route =
 
         Template (ViewPage id) ->
             "/template/view/" ++ id
+
+        TodoList (ViewPage id) ->
+            "/todolist/view/" ++ id
+
+        TodoList _ ->
+            "/todolist"

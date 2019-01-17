@@ -3,12 +3,12 @@ module Page.Home exposing (Model, Msg(..), decoder, encoder, getKey, init, updat
 import ActualList exposing (ActualList(..))
 import Browser.Navigation as Nav
 import Dict
-import Html exposing (Html, a, button, div, i, li, text, ul)
+import Html exposing (Html, a, button, div, i, li, span, text, ul)
 import Html.Attributes exposing (class, href)
 import Html.Events exposing (onClick)
 import Json.Decode
 import Json.Encode
-import Route exposing (SubTemplatePage(..))
+import Route exposing (CrudPage(..))
 import Template exposing (Template(..), getTodoByTemplateId)
 
 
@@ -51,24 +51,34 @@ update msg model =
 view : Template -> ActualList -> Model -> Html Msg
 view (Template todoListTemplates todoTemplates) (ActualList todoList todo) model =
     div []
-        [ ul []
-            (Dict.foldl
-                (\id template acc ->
-                    let
-                        copyCount =
-                            getTodoByTemplateId id todoList |> Dict.size
-                    in
-                    li []
-                        [ text (template.name ++ "(" ++ String.fromInt copyCount ++ ")")
-                        , button [ onClick (Edit id), class "btn btn-link" ] [ text "Edit" ]
-                        , button [ onClick (View id), class "btn btn-link" ] [ text "View " ]
-                        ]
-                        :: acc
+        [ if Dict.isEmpty todoListTemplates then
+            div [] [ text "you do not have a template yet, either import one or create one by clicking", i [ class " mx-2 fa fa-plus-circle" ] [], text "." ]
+
+          else
+            ul [ class "list-unstyled" ]
+                (Dict.foldl
+                    (\id template acc ->
+                        let
+                            copyCount =
+                                getTodoByTemplateId id todoList |> Dict.size
+                        in
+                        li []
+                            [ div [ class "row" ]
+                                [ div [ class "col-8" ]
+                                    [ text (template.name ++ "(" ++ String.fromInt copyCount ++ ")")
+                                    ]
+                                , div [ class "col-4 text-center" ]
+                                    [ a [ href (Route.toString (Route.Template (Route.EditPage id))), class "badge badge-primary" ] [ i [ class "fa fa-pencil-alt" ] [] ]
+                                    , a [ href (Route.toString (Route.Template (Route.ViewPage id))), class "badge badge-secondary" ] [ i [ class "fa fa-eye" ] [] ]
+                                    ]
+                                ]
+                            ]
+                            :: acc
+                    )
+                    []
+                    todoListTemplates
                 )
-                []
-                todoListTemplates
-            )
-        , a [ href (Route.toString (Route.Template Route.AddPage)) ] [ i [ class "fa fa-plus-circle fa-3x" ] [] ]
+        , a [ href (Route.toString (Route.Template Route.AddPage)) ] [ i [ class "fa fa-plus-circle fa-2x" ] [] ]
         ]
 
 

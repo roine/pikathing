@@ -13,6 +13,7 @@ import Json.Decode
 import Json.Encode
 import Page.Home
 import Page.Template exposing (Model(..), Msg(..))
+import Page.TodoList
 import Route
 import Task
 import Template exposing (Template(..))
@@ -28,6 +29,7 @@ port export_ : () -> Cmd msg
 type Model
     = HomePage Page.Home.Model Template ActualList
     | TemplatePage Page.Template.Model Template ActualList
+    | TodoListPage Page.TodoList.Model Template ActualList
     | NotFoundPage { key : Nav.Key } Template ActualList
     | ErrorPage Json.Decode.Error Nav.Key Template ActualList
 
@@ -81,6 +83,18 @@ toRoute url key template actualList =
                 ]
             )
 
+        Just (Route.TodoList subRoute) ->
+            let
+                ( todoListModel, cmd ) =
+                    Page.TodoList.init key template subRoute
+            in
+            ( TodoListPage todoListModel template actualList
+            , Cmd.batch
+                [ Cmd.map TodoListMsg cmd
+                , save (encoded (Page.TodoList.encoder template actualList todoListModel))
+                ]
+            )
+
 
 
 -- UPDATE
@@ -95,6 +109,9 @@ getTemplateFromModel model =
         TemplatePage _ template _ ->
             template
 
+        TodoListPage _ template _ ->
+            template
+
         NotFoundPage _ template _ ->
             template
 
@@ -102,12 +119,16 @@ getTemplateFromModel model =
             template
 
 
+getActualListFromModel : Model -> ActualList
 getActualListFromModel model =
     case model of
         HomePage _ _ actualList ->
             actualList
 
         TemplatePage _ _ actualList ->
+            actualList
+
+        TodoListPage _ _ actualList ->
             actualList
 
         NotFoundPage _ _ actualList ->
@@ -122,6 +143,7 @@ type Msg
     | UrlChange Url.Url
     | HomeMsg Page.Home.Msg
     | TemplateMsg Page.Template.Msg
+    | TodoListMsg Page.TodoList.Msg
     | Export
     | Loaded File
     | Import
@@ -173,6 +195,21 @@ update msg model =
         ( TemplateMsg subMsg, _ ) ->
             noOp
 
+        ( TodoListMsg subMsg, TodoListPage m t actualList ) ->
+            let
+                updated =
+                    Page.TodoList.update subMsg t actualList m
+            in
+            ( TodoListPage updated.model updated.template updated.actualList
+            , Cmd.batch
+                [ Cmd.map TodoListMsg updated.cmd
+                , save (encoded (Page.TodoList.encoder updated.template actualList updated.model))
+                ]
+            )
+
+        ( TodoListMsg subMsg, _ ) ->
+            noOp
+
         ( Export, _ ) ->
             ( model, export_ () )
 
@@ -203,6 +240,9 @@ getKey model =
         TemplatePage m _ _ ->
             Page.Template.getKey m
 
+        TodoListPage m _ _ ->
+            Page.TodoList.getKey m
+
         ErrorPage error key template _ ->
             key
 
@@ -221,6 +261,9 @@ view model =
             TemplatePage _ _ _ ->
                 "Template"
 
+            TodoListPage _ _ _ ->
+                "Todo list"
+
             NotFoundPage _ _ _ ->
                 "Not Found"
 
@@ -229,14 +272,24 @@ view model =
     , body =
         [ navView model
         , bodyView model
-        , div [ class "container" ] [ Debug.Extra.viewModel model ]
+        , case model of
+            ErrorPage _ _ _ _ ->
+                text ""
+
+            NotFoundPage _ _ _ ->
+                text ""
+
+            _ ->
+                div [ class "container" ] [ Debug.Extra.viewModel model ]
         ]
     }
 
 
 navView model =
-    div [ class "container" ]
-        [ h1 [] [ a [ href (Route.toString Route.Home) ] [ text "Flute" ] ]
+    div [ class "bg-light p-3 mb-3" ]
+        [ div [ class "container text-center" ]
+            [ h1 [] [ a [ href (Route.toString Route.Home) ] [ text "Plume" ] ]
+            ]
         ]
 
 
@@ -249,6 +302,9 @@ bodyView model =
 
             TemplatePage m t tl ->
                 Html.map TemplateMsg (Page.Template.view t tl m)
+
+            TodoListPage m t tl ->
+                Html.map TodoListMsg (Page.TodoList.view t tl m)
 
             NotFoundPage _ _ _ ->
                 text "Page not found"
@@ -297,8 +353,14 @@ decoder key =
                             (Json.Decode.field "template" Template.decoder)
                             (Json.Decode.field "todoList" ActualList.decoder)
 
-                    _ ->
-                        Json.Decode.fail "Unknown type"
+                    "TodoList" ->
+                        Json.Decode.map3 TodoListPage
+                            (Page.TodoList.decoder key)
+                            (Json.Decode.field "template" Template.decoder)
+                            (Json.Decode.field "todoList" ActualList.decoder)
+
+                    unknownType ->
+                        Json.Decode.fail ("Unknown type" ++ unknownType)
             )
 
 

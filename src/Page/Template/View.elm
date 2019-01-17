@@ -3,12 +3,13 @@ module Page.Template.View exposing (Model, Msg, decoder, encoder, getKey, init, 
 import ActualList exposing (ActualList(..))
 import Browser.Navigation as Nav
 import Dict exposing (Dict)
-import Html exposing (Html, button, div, input, label, li, text, ul)
-import Html.Attributes exposing (class, placeholder, value)
+import Html exposing (Html, a, button, div, h2, i, input, label, li, text, ul)
+import Html.Attributes exposing (class, href, placeholder, value)
 import Html.Events exposing (onClick, onInput)
 import Json.Decode
 import Json.Encode
 import Random
+import Route
 import Template exposing (Template(..), TodoTemplate, getTodoByTemplateId)
 import Uuid.Barebones
 
@@ -64,7 +65,7 @@ update msg (Template _ todoTemplate) ((ActualList todoLists todos) as actualList
                     List.map2
                         (\( todoId, todo ) id ->
                             ( id
-                            , { templateId = todo.templateId
+                            , { templateId = model.id
                               , completed = False
                               , todoId = todoId
                               }
@@ -87,20 +88,35 @@ update msg (Template _ todoTemplate) ((ActualList todoLists todos) as actualList
 
 
 view : Template -> ActualList -> Model -> Html Msg
-view template (ActualList todoLists todos) model =
+view (Template todoListTemplates _) (ActualList todoLists todos) model =
     let
         currentTodoLists =
             getTodoByTemplateId model.templateId todoLists
+
+        todoListTemplateName =
+            Dict.get model.templateId todoListTemplates |> Maybe.map .name |> Maybe.withDefault ""
     in
     div []
-        [ div [ class "form-row align-items-center" ]
+        [ h2 [] [ text todoListTemplateName ]
+        , div [ class "form-row" ]
             [ div [ class "col-auto" ]
                 [ label [ class "sr-only" ] [ text "Name" ]
                 , input [ onInput UpdateName, value model.name, class "form-control", placeholder "Name of the copy, eg: Porsche" ] []
                 ]
             , div [ class "col-auto" ] [ button [ onClick MakeCopy, class "btn btn-primary" ] [ text "Make a new copy" ] ]
             ]
-        , ul [] (List.map (\todoList -> li [] [ text todoList.name ]) (Dict.values currentTodoLists))
+        , ul []
+            (List.map
+                (\( id, todoList ) ->
+                    li []
+                        [ text todoList.name
+                        , a [ href (Route.toString (Route.TodoList (Route.ViewPage id))), class "badge badge-primary" ]
+                            [ i [ class "fa fa-pencil-alt" ] []
+                            ]
+                        ]
+                )
+                (Dict.toList currentTodoLists)
+            )
         ]
 
 

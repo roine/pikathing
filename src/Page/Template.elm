@@ -18,7 +18,7 @@ type Model
     | ViewModel TemplateView.Model
 
 
-init : Nav.Key -> Template -> Route.SubTemplatePage -> ( Model, Cmd Msg )
+init : Nav.Key -> Template -> Route.CrudPage -> ( Model, Cmd Msg )
 init key template route =
     case route of
         Route.AddPage ->
