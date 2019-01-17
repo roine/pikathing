@@ -285,6 +285,7 @@ view model =
     }
 
 
+navView : Model -> Html Msg
 navView model =
     div [ class "bg-light p-3 mb-3" ]
         [ div [ class "container text-center" ]

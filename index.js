@@ -8,7 +8,6 @@ const app = Elm.Main.init({
 })
 
 app.ports.save.subscribe(function (data) {
-  console.log('saved', JSON.parse(data))
   localStorage.setItem(key, data)
 })
 
