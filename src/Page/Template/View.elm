@@ -97,9 +97,18 @@ view (Template todoListTemplates _) (ActualList todoLists todos) model =
             Dict.get model.templateId todoListTemplates |> Maybe.map .name |> Maybe.withDefault ""
     in
     div []
-        [ h2 [] [ text todoListTemplateName ]
+        [ div [ class "row align-items-center" ]
+            [ h2 [ class "col-auto pr-1" ]
+                [ text todoListTemplateName
+                ]
+            , div [ class "col-auto pl-1" ]
+                [ a [ href (Route.toString (Route.Template (Route.EditPage model.id))), class "badge badge-primary" ]
+                    [ i [ class "fa fa-pencil-alt" ] []
+                    ]
+                ]
+            ]
         , div [ class "form-row" ]
-            [ div [ class "col-auto" ]
+            [ div [ class "col-auto " ]
                 [ label [ class "sr-only" ] [ text "Name" ]
                 , input [ onInput UpdateName, value model.name, class "form-control", placeholder "Name of the copy, eg: Porsche" ] []
                 ]

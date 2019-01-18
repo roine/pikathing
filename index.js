@@ -11,6 +11,8 @@ app.ports.save.subscribe(function (data) {
   localStorage.setItem(key, data)
 })
 
+window.debug = JSON.parse(localStorage.app)
+
 app.ports.export_.subscribe(function () {
   const data = localStorage.getItem(key)
   var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(data)

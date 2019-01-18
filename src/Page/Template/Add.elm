@@ -3,10 +3,13 @@ module Page.Template.Add exposing (Model, Msg(..), decoder, encoder, getKey, ini
 import ActualList exposing (ActualList(..))
 import Browser.Dom as Dom
 import Browser.Navigation as Nav
+import Color exposing (Color)
+import Colour.Extra
 import Dict exposing (Dict)
 import Html exposing (Html, a, button, div, i, input, label, li, text, ul)
-import Html.Attributes exposing (class, disabled, id, placeholder, type_, value)
+import Html.Attributes exposing (class, disabled, id, placeholder, style, type_, value)
 import Html.Events exposing (on, onClick, onInput)
+import Icon exposing (Icon)
 import Json.Decode
 import Json.Encode
 import Random
@@ -27,6 +30,8 @@ type alias Model =
     , nextTodoId : String
     , todos : Dict String TodoTemplate
     , transient : { name : String }
+    , icon : Maybe Icon
+    , colour : Color
     }
 
 
@@ -38,12 +43,24 @@ init key =
       , todos = Dict.fromList []
       , transient = { name = "" }
       , nextTodoId = ""
+      , icon = Nothing
+      , colour = Color.black
       }
     , Cmd.batch
         [ Random.generate NewUIDForTodoList Uuid.Barebones.uuidStringGenerator
         , Random.generate NewUIDForTodo Uuid.Barebones.uuidStringGenerator
+        , Random.generate NewColor (Random.map3 Color.rgb (Random.float 0 1) (Random.float 0 1) (Random.float 0 1))
         ]
     )
+
+
+
+-- Avilable icons to be picked up
+
+
+availableIconsList : List Icon
+availableIconsList =
+    [ Icon.Home, Icon.Laptop, Icon.Car, Icon.Book, Icon.Bed ]
 
 
 
@@ -57,7 +74,9 @@ type Msg
     | Save
     | NewUIDForTodoList String
     | NewUIDForTodo String
+    | SelectIcon Icon
     | Cancel
+    | NewColor Color
     | NoOp
 
 
@@ -84,7 +103,7 @@ update msg ((Template todoListTemplates todoTemplates) as templates) model =
             )
 
         Save ->
-            ( Template (Dict.insert model.id { name = model.name } todoListTemplates) (Dict.union todoTemplates model.todos)
+            ( Template (Dict.insert model.id (Template.buildTodoList model) todoListTemplates) (Dict.union todoTemplates model.todos)
             , model
             , Nav.pushUrl model.key (Route.toString Route.Home)
             )
@@ -102,6 +121,18 @@ update msg ((Template todoListTemplates todoTemplates) as templates) model =
             ( templates
             , model
             , Nav.back model.key 1
+            )
+
+        SelectIcon icon ->
+            ( templates
+            , { model | icon = Just icon }
+            , Cmd.none
+            )
+
+        NewColor newColour ->
+            ( templates
+            , { model | colour = newColour }
+            , Cmd.none
             )
 
 
@@ -127,6 +158,19 @@ view template actualList model =
                                 Json.Decode.fail "Other than Enter"
                         )
                 )
+
+        colourStyle colour active =
+            [ style "background"
+                (if active then
+                    Color.toCssString (Colour.Extra.mix 0.4 Color.white colour)
+
+                 else
+                    Color.toCssString (Colour.Extra.mix 0.7 Color.white colour)
+                )
+            , style "color" (Color.toCssString (Colour.Extra.mix 0.4 Color.black colour))
+            , style "border" ("1px solid " ++ Color.toCssString (Colour.Extra.mix 0.5 Color.white colour))
+            , style "transition" "300ms all ease"
+            ]
     in
     div []
         [ div [ class "form-group mb-2" ]
@@ -165,6 +209,25 @@ view template actualList model =
                 )
                 (Dict.values model.todos)
             )
+        , div []
+            [ text "Optionally Pick an icon"
+            , div [ class "row justify-content-start" ]
+                (List.map
+                    (\icon ->
+                        div [ class "col-auto my-2" ]
+                            [ div [ onClick (SelectIcon icon), class "pointer" ]
+                                [ Icon.view
+                                    ([ class "icon-circle"
+                                     ]
+                                        ++ colourStyle model.colour (Just icon == model.icon)
+                                    )
+                                    icon
+                                ]
+                            ]
+                    )
+                    availableIconsList
+                )
+            ]
         , div [ class "row" ]
             [ div [ class "col-6" ] [ button [ onClick Cancel, class "btn btn-danger", type_ "button" ] [ text "Cancel" ] ]
             , div [ class "col-6 text-right" ]
@@ -191,24 +254,43 @@ getKey =
 
 encoder : Model -> Json.Encode.Value
 encoder model =
+    let
+        withIcon =
+            case model.icon of
+                Nothing ->
+                    []
+
+                Just icon ->
+                    [ ( "icon", Json.Encode.string (Icon.toString icon) ) ]
+    in
     Json.Encode.object
-        [ ( "name", Json.Encode.string model.name )
-        , ( "id", Json.Encode.string model.id )
-        , ( "nextTodoId", Json.Encode.string model.nextTodoId )
-        , ( "todos"
-          , Json.Encode.dict identity
+        ([ ( "name", Json.Encode.string model.name )
+         , ( "id", Json.Encode.string model.id )
+         , ( "nextTodoId", Json.Encode.string model.nextTodoId )
+         , ( "todos"
+           , Json.Encode.dict identity
                 (\{ name, templateId } ->
                     Json.Encode.object [ ( "name", Json.Encode.string name ), ( "templateId", Json.Encode.string templateId ) ]
                 )
                 model.todos
-          )
-        , ( "transient", Json.Encode.object [ ( "name", Json.Encode.string model.transient.name ) ] )
-        ]
+           )
+         , ( "transient", Json.Encode.object [ ( "name", Json.Encode.string model.transient.name ) ] )
+         , ( "colour"
+           , Json.Encode.object
+                [ ( "red", Json.Encode.float (.red (Color.toRgba model.colour)) )
+                , ( "green", Json.Encode.float (.green (Color.toRgba model.colour)) )
+                , ( "blue", Json.Encode.float (.blue (Color.toRgba model.colour)) )
+                , ( "alpha", Json.Encode.float (.alpha (Color.toRgba model.colour)) )
+                ]
+           )
+         ]
+            ++ withIcon
+        )
 
 
 decoder : Nav.Key -> Json.Decode.Decoder Model
 decoder key =
-    Json.Decode.map6 Model
+    Json.Decode.map8 Model
         (Json.Decode.succeed key)
         (Json.Decode.field "name" Json.Decode.string)
         (Json.Decode.field "id" Json.Decode.string)
@@ -222,3 +304,13 @@ decoder key =
             )
         )
         (Json.Decode.field "transient" (Json.Decode.map (\name -> { name = name }) (Json.Decode.field "name" Json.Decode.string)))
+        (Json.Decode.maybe (Json.Decode.field "icon" Json.Decode.string) |> Json.Decode.map (Maybe.andThen Icon.fromString))
+        (Json.Decode.field "colour"
+            (Json.Decode.map4
+                Color.rgba
+                (Json.Decode.field "red" Json.Decode.float)
+                (Json.Decode.field "green" Json.Decode.float)
+                (Json.Decode.field "blue" Json.Decode.float)
+                (Json.Decode.field "alpha" Json.Decode.float)
+            )
+        )

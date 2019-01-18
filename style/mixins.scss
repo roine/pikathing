@@ -1,0 +1,18 @@
+@function makelongshadow($color) {
+  $val: 0px 0px $color;
+  $j: 50;
+  $opacity: 1;
+  @for $i from 1 through $j {
+    $opacity: $opacity - ($i / $j);
+    @if $opacity < 0 {
+      $opacity: 0;
+    }
+    /*$val: #{$val}, #{$i}px #{$i}px #{rgba($color, $opacity)};*/
+    $val: #{$val}, #{$i}px #{$i}px #{$color};
+  }
+  @return $val;
+}
+
+@mixin longshadow($color) {
+  text-shadow: makelongshadow($color);
+}

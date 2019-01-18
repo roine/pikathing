@@ -2,10 +2,13 @@ module Page.Home exposing (Model, Msg(..), decoder, encoder, getKey, init, updat
 
 import ActualList exposing (ActualList(..))
 import Browser.Navigation as Nav
+import Color
+import Colour.Extra
 import Dict
-import Html exposing (Html, a, button, div, i, li, p, span, text, ul)
-import Html.Attributes exposing (class, classList, href)
+import Html exposing (Html, a, button, div, h4, h5, i, li, p, span, text, ul)
+import Html.Attributes exposing (class, classList, href, style)
 import Html.Events exposing (onClick)
+import Icon
 import Json.Decode
 import Json.Encode
 import Route exposing (CrudPage(..))
@@ -18,12 +21,12 @@ import Template exposing (Template(..), getTodoByTemplateId)
 
 
 type alias Model =
-    { key : Nav.Key, expanded : Set String }
+    { key : Nav.Key }
 
 
 init : Nav.Key -> ( Model, Cmd Msg )
 init key =
-    ( { key = key, expanded = Set.empty }, Cmd.none )
+    ( { key = key }, Cmd.none )
 
 
 
@@ -31,31 +34,38 @@ init key =
 
 
 type Msg
-    = Expand String
+    = NoOp
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
-        Expand key ->
-            ( { model
-                | expanded =
-                    if Set.member key model.expanded then
-                        Set.remove key model.expanded
-
-                    else
-                        Set.insert key model.expanded
-              }
-            , Cmd.none
-            )
+    ( model, Cmd.none )
 
 
 
 -- VIEW
 
 
+pluralize count singular plural =
+    if count == 1 then
+        String.fromInt count ++ " " ++ singular
+
+    else
+        String.fromInt count ++ " " ++ plural
+
+
 view : Template -> ActualList -> Model -> Html Msg
 view (Template todoListTemplates todoTemplates) (ActualList todoList todo) model =
+    let
+        colourStyle colour =
+            [ style "background" (Color.toCssString (Colour.Extra.mix 0.7 Color.white colour))
+            , style "color" (Color.toCssString (Colour.Extra.mix 0.4 Color.black colour))
+            , style "border" ("1px solid " ++ Color.toCssString (Colour.Extra.mix 0.5 Color.white colour))
+            ]
+
+        gridRule =
+            "col-sm-6 col-md-4 col-lg-3 col-xl-2 px-1 py-1"
+    in
     div []
         [ if Dict.isEmpty todoListTemplates then
             p []
@@ -65,64 +75,59 @@ view (Template todoListTemplates todoTemplates) (ActualList todoList todo) model
                 ]
 
           else
-            ul [ class "list-unstyled" ]
-                (Dict.foldl
-                    (\id template acc ->
-                        let
-                            currentTodoLists =
-                                getTodoByTemplateId id todoList
+            text ""
+        , ul [ class "list-unstyled row" ]
+            (Dict.foldl
+                (\id template acc ->
+                    let
+                        currentTodoLists =
+                            getTodoByTemplateId id todoList
 
-                            copyCount =
-                                currentTodoLists |> Dict.size
-                        in
-                        li []
-                            [ div [ class "row" ]
-                                [ div [ class "col-8" ]
-                                    [ text (template.name ++ "(" ++ String.fromInt copyCount ++ ")")
-                                    , if Dict.isEmpty currentTodoLists then
-                                        text ""
+                        copyCount =
+                            currentTodoLists |> Dict.size
 
-                                      else
-                                        button [ onClick (Expand id) ]
-                                            [ i
-                                                [ classList
-                                                    [ ( "fa", True )
-                                                    , ( "fa-plus", not (Set.member id model.expanded) )
-                                                    , ( "fa-minus", Set.member id model.expanded )
-                                                    ]
-                                                ]
-                                                []
-                                            ]
-                                    , if Set.member id model.expanded then
-                                        ul [ class "list-unstyled ml-4 my-2" ]
-                                            (List.map
-                                                (\( id_, todoList_ ) ->
-                                                    li [ class "my-1" ]
-                                                        [ a [ href (Route.toString (Route.TodoList (Route.ViewPage id_))) ] [ text todoList_.name ]
-                                                        ]
-                                                )
-                                                (currentTodoLists |> Dict.toList)
-                                            )
+                        hasIcon =
+                            case template.icon of
+                                Nothing ->
+                                    False
 
-                                      else
-                                        text ""
-                                    ]
-                                , div [ class "col-4 text-center" ]
-                                    [ a [ href (Route.toString (Route.Template (Route.EditPage id))), class "badge badge-primary" ]
-                                        [ i [ class "fa fa-pencil-alt" ] []
-                                        ]
-                                    , a [ href (Route.toString (Route.Template (Route.ViewPage id))), class "badge badge-secondary" ]
-                                        [ i [ class "fa fa-eye" ] []
-                                        ]
-                                    ]
-                                ]
+                                Just _ ->
+                                    True
+                    in
+                    li [ class gridRule ]
+                        [ a
+                            [ href (Route.toString (Route.Template (Route.ViewPage id)))
+                            , classList [ ( "linked-panel", True ), ( "linked-panel-with-icon", hasIcon ) ]
                             ]
-                            :: acc
-                    )
-                    []
-                    todoListTemplates
+                            [ case template.icon of
+                                Nothing ->
+                                    text ""
+
+                                Just icon ->
+                                    div [ class "text-center" ]
+                                        [ Icon.view
+                                            ([ class "linked-panel-icon"
+                                             ]
+                                                ++ colourStyle template.colour
+                                            )
+                                            icon
+                                        ]
+                            , h4 [ class "linked-panel-title text-center" ] [ text template.name ]
+                            , div [ class "linked-panel-subtitle text-center" ] [ text (pluralize copyCount "item" "items") ]
+                            , div [ class "linked-panel-navigation-clue" ] [ i [ class "fa fa-arrow-right" ] [] ]
+                            ]
+                        ]
+                        :: acc
                 )
-        , div [ class "fixed-bottom m-4" ] [ a [ href (Route.toString (Route.Template Route.AddPage)) ] [ i [ class "fa fa-plus-circle fa-2x" ] [] ] ]
+                []
+                todoListTemplates
+                ++ [ li [ class gridRule ]
+                        [ a [ href (Route.toString (Route.Template Route.AddPage)), class "linked-panel" ]
+                            [ h4 [ class "linked-panel-subtitle absolute-center" ] [ text "+" ]
+                            ]
+                        ]
+                   ]
+            )
         ]
 
 
@@ -139,7 +144,7 @@ encoder : Template -> ActualList -> Model -> Json.Encode.Value
 encoder template actualList model =
     Json.Encode.object
         [ ( "type", Json.Encode.string "Home" )
-        , ( "model", Json.Encode.object [ ( "expanded", Json.Encode.set Json.Encode.string model.expanded ) ] )
+        , ( "model", Json.Encode.object [] )
         , ( "template", Template.encoder template )
         , ( "todoList", ActualList.encoder actualList )
         ]
@@ -148,7 +153,6 @@ encoder template actualList model =
 decoder : Nav.Key -> Json.Decode.Decoder Model
 decoder key =
     Json.Decode.field "model"
-        (Json.Decode.map2 Model
+        (Json.Decode.map Model
             (Json.Decode.succeed key)
-            (Json.Decode.field "expanded" (Json.Decode.list Json.Decode.string) |> Json.Decode.map Set.fromList)
         )

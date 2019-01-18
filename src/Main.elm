@@ -1,5 +1,7 @@
 port module Main exposing (Flags, Model(..), Msg(..), bodyView, getKey, init, main, subscriptions, toRoute, update, view)
 
+--import Debug.Extra
+
 import ActualList exposing (ActualList(..))
 import Browser exposing (Document)
 import Browser.Navigation as Nav
@@ -100,44 +102,6 @@ toRoute url key template actualList =
 -- UPDATE
 
 
-getTemplateFromModel : Model -> Template
-getTemplateFromModel model =
-    case model of
-        HomePage _ template _ ->
-            template
-
-        TemplatePage _ template _ ->
-            template
-
-        TodoListPage _ template _ ->
-            template
-
-        NotFoundPage _ template _ ->
-            template
-
-        ErrorPage error key template _ ->
-            template
-
-
-getActualListFromModel : Model -> ActualList
-getActualListFromModel model =
-    case model of
-        HomePage _ _ actualList ->
-            actualList
-
-        TemplatePage _ _ actualList ->
-            actualList
-
-        TodoListPage _ _ actualList ->
-            actualList
-
-        NotFoundPage _ _ actualList ->
-            actualList
-
-        ErrorPage error key _ actualList ->
-            actualList
-
-
 type Msg
     = UrlRequested Browser.UrlRequest
     | UrlChange Url.Url
@@ -224,8 +188,8 @@ update msg model =
                 Ok newModel ->
                     ( newModel, Cmd.none )
 
-                Err _ ->
-                    noOp
+                Err err ->
+                    ( ErrorPage err (getKey model) Template.init ActualList.init, Cmd.none )
 
 
 getKey : Model -> Nav.Key
@@ -280,6 +244,7 @@ view model =
                 text ""
 
             _ ->
+                --                text ""
                 div [ class "container" ] [ Debug.Extra.viewModel model ]
         ]
     }
@@ -367,6 +332,44 @@ decoder key =
 
 encoded =
     Json.Encode.encode 0
+
+
+getTemplateFromModel : Model -> Template
+getTemplateFromModel model =
+    case model of
+        HomePage _ template _ ->
+            template
+
+        TemplatePage _ template _ ->
+            template
+
+        TodoListPage _ template _ ->
+            template
+
+        NotFoundPage _ template _ ->
+            template
+
+        ErrorPage error key template _ ->
+            template
+
+
+getActualListFromModel : Model -> ActualList
+getActualListFromModel model =
+    case model of
+        HomePage _ _ actualList ->
+            actualList
+
+        TemplatePage _ _ actualList ->
+            actualList
+
+        TodoListPage _ _ actualList ->
+            actualList
+
+        NotFoundPage _ _ actualList ->
+            actualList
+
+        ErrorPage error key _ actualList ->
+            actualList
 
 
 main : Program Flags Model Msg
