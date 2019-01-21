@@ -102,7 +102,7 @@ view (Template todoListTemplates _) (ActualList todoLists todos) model =
                 [ text todoListTemplateName
                 ]
             , div [ class "col-auto pl-1" ]
-                [ a [ href (Route.toString (Route.Template (Route.EditPage model.id))), class "badge badge-primary" ]
+                [ a [ href (Route.toString (Route.Template (Route.EditPage model.templateId))), class "badge badge-primary" ]
                     [ i [ class "fa fa-pencil-alt" ] []
                     ]
                 ]

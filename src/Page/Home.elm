@@ -5,14 +5,13 @@ import Browser.Navigation as Nav
 import Color
 import Colour.Extra
 import Dict
-import Html exposing (Html, a, button, div, h4, h5, i, li, p, span, text, ul)
+import Html exposing (Html, a, button, div, h4, i, li, p, span, text, ul)
 import Html.Attributes exposing (class, classList, href, style)
 import Html.Events exposing (onClick)
 import Icon
 import Json.Decode
 import Json.Encode
 import Route exposing (CrudPage(..))
-import Set exposing (Set)
 import Template exposing (Template(..), getTodoByTemplateId)
 
 
@@ -34,12 +33,18 @@ init key =
 
 
 type Msg
-    = NoOp
+    = NavigateToEdit String
+    | NavigateView String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    ( model, Cmd.none )
+    case msg of
+        NavigateToEdit id ->
+            ( model, Nav.pushUrl model.key (Route.toString (Route.Template (Route.EditPage id))) )
+
+        NavigateView id ->
+            ( model, Nav.pushUrl model.key (Route.toString (Route.Template (Route.ViewPage id))) )
 
 
 
@@ -64,7 +69,7 @@ view (Template todoListTemplates todoTemplates) (ActualList todoList todo) model
             ]
 
         gridRule =
-            "col-sm-6 col-md-4 col-lg-3 col-xl-2 px-1 py-1"
+            "col-sm-6 col-xl-3 px-1 py-1"
     in
     div []
         [ if Dict.isEmpty todoListTemplates then
@@ -86,6 +91,9 @@ view (Template todoListTemplates todoTemplates) (ActualList todoList todo) model
                         copyCount =
                             currentTodoLists |> Dict.size
 
+                        criteriaCount =
+                            getTodoByTemplateId id todoTemplates |> Dict.size
+
                         hasIcon =
                             case template.icon of
                                 Nothing ->
@@ -95,9 +103,9 @@ view (Template todoListTemplates todoTemplates) (ActualList todoList todo) model
                                     True
                     in
                     li [ class gridRule ]
-                        [ a
-                            [ href (Route.toString (Route.Template (Route.ViewPage id)))
-                            , classList [ ( "linked-panel", True ), ( "linked-panel-with-icon", hasIcon ) ]
+                        [ div
+                            [ classList [ ( "linked-panel list-group", True ), ( "linked-panel-with-icon", hasIcon ) ]
+                            , onClick (NavigateView id)
                             ]
                             [ case template.icon of
                                 Nothing ->
@@ -106,15 +114,23 @@ view (Template todoListTemplates todoTemplates) (ActualList todoList todo) model
                                 Just icon ->
                                     div [ class "text-center" ]
                                         [ Icon.view
-                                            ([ class "linked-panel-icon"
+                                            ([ class "icon-circle"
                                              ]
                                                 ++ colourStyle template.colour
                                             )
                                             icon
                                         ]
-                            , h4 [ class "linked-panel-title text-center" ] [ text template.name ]
-                            , div [ class "linked-panel-subtitle text-center" ] [ text (pluralize copyCount "item" "items") ]
-                            , div [ class "linked-panel-navigation-clue" ] [ i [ class "fa fa-arrow-right" ] [] ]
+                            , h4 [ class "linked-panel-title text-center" ]
+                                [ span []
+                                    [ text template.name
+                                    ]
+                                ]
+                            , div [ class "text-center linked-panel-subtitle" ] [ span [ class "badge badge-dark badge-pill" ] [ text (String.fromInt copyCount) ] ]
+                            , button [ onClick (NavigateToEdit id), class "linked-panel-edit" ]
+                                [ i [ class "fa fa-pencil-alt" ] []
+                                ]
+                            , div [ class "linked-panel-navigation-clue" ]
+                                [ i [ class "fa fa-arrow-right" ] [] ]
                             ]
                         ]
                         :: acc
@@ -123,7 +139,7 @@ view (Template todoListTemplates todoTemplates) (ActualList todoList todo) model
                 todoListTemplates
                 ++ [ li [ class gridRule ]
                         [ a [ href (Route.toString (Route.Template Route.AddPage)), class "linked-panel" ]
-                            [ h4 [ class "linked-panel-subtitle absolute-center" ] [ text "+" ]
+                            [ h4 [ class "linked-panel-title absolute-center" ] [ text "+" ]
                             ]
                         ]
                    ]

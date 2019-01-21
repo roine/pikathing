@@ -12,7 +12,7 @@ import Html exposing (Html, a, button, code, div, h1, li, p, pre, text, ul)
 import Html.Attributes exposing (class, href, style)
 import Html.Events exposing (onClick)
 import Json.Decode
-import Json.Encode
+import Json.Encode exposing (Value)
 import Page.Home
 import Page.Template exposing (Model(..), Msg(..))
 import Page.TodoList
@@ -243,6 +243,9 @@ view model =
             NotFoundPage _ _ _ ->
                 text ""
 
+            HomePage _ _ _ ->
+                text ""
+
             _ ->
                 --                text ""
                 div [ class "container" ] [ Debug.Extra.viewModel model ]
@@ -252,9 +255,9 @@ view model =
 
 navView : Model -> Html Msg
 navView model =
-    div [ class "bg-light p-3 mb-3" ]
+    div [ class "bg-primary p-3 mb-3" ]
         [ div [ class "container text-center" ]
-            [ h1 [] [ a [ href (Route.toString Route.Home) ] [ text "Plume" ] ]
+            [ h1 [] [ a [ class "text-light", href (Route.toString Route.Home) ] [ text "Plume" ] ]
             ]
         ]
 
@@ -290,13 +293,28 @@ bodyView model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    case model of
+        HomePage m template actualList ->
+            Sub.none
+
+        TemplatePage m template actualList ->
+            Sub.map TemplateMsg (Page.Template.subscritptions template actualList m)
+
+        TodoListPage m template actualList ->
+            Sub.none
+
+        NotFoundPage record template actualList ->
+            Sub.none
+
+        ErrorPage error key template actualList ->
+            Sub.none
 
 
 
 -- INIT
 
 
+decoded : Nav.Key -> String -> Result Json.Decode.Error Model
 decoded key payload =
     Json.Decode.decodeString (decoder key) payload
 
@@ -330,6 +348,7 @@ decoder key =
             )
 
 
+encoded : Value -> String
 encoded =
     Json.Encode.encode 0
 
