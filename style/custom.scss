@@ -9,7 +9,6 @@ $gutter: 20px;
   box-shadow: 0 2px 2px 1px #ddd;
   border-radius: 2px;
   padding: $gutter;
-  margin: 5px;
   position: relative;
   cursor: pointer;
   display: block;
@@ -62,6 +61,7 @@ a.linked-panel:hover {
   right: 0;
 }
 
+// Generic
 .absolute-y-center {
   top: 50%;
   transform: translateY(-50%);
@@ -88,4 +88,11 @@ a.linked-panel:hover {
 
 .pointer {
   cursor: pointer;
+}
+
+.input-cross {
+  @extend .absolute-y-center;
+  right: 0.75rem * 1.5; // 0.75 is the padding in the input
+  color: #ccc;
+  z-index: 1000;
 }

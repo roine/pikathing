@@ -8,6 +8,7 @@ import Dict exposing (Dict)
 import Html exposing (Html, button, div, i, input, label, li, text, ul)
 import Html.Attributes exposing (class, id, placeholder, style, type_, value)
 import Html.Events exposing (on, onClick, onInput)
+import Html.Extra exposing (onEnter)
 import Icon exposing (Icon)
 import Json.Decode
 import Json.Encode
@@ -113,7 +114,7 @@ update msg model =
 
 availableIconsList : List Icon
 availableIconsList =
-    [ Icon.Home, Icon.Laptop, Icon.Car, Icon.Book, Icon.Bed ]
+    [ Icon.Home, Icon.Laptop, Icon.Car, Icon.Book, Icon.Bed, Icon.Briefcase ]
 
 
 view : Template -> ActualList -> Model -> Html Msg
@@ -121,19 +122,6 @@ view template actualList model =
     let
         meetPrerequisite =
             not (String.isEmpty model.name) && not (Dict.isEmpty model.todos)
-
-        onEnter tagger =
-            on "keydown"
-                (Json.Decode.field "key" Json.Decode.string
-                    |> Json.Decode.andThen
-                        (\key ->
-                            if key == "Enter" then
-                                Json.Decode.succeed tagger
-
-                            else
-                                Json.Decode.fail "Other than Enter"
-                        )
-                )
 
         colourStyle colour active =
             [ style "background"
@@ -190,7 +178,7 @@ view template actualList model =
             , div [ class "row justify-content-start" ]
                 (List.map
                     (\icon ->
-                        div [ class "col-auto my-2" ]
+                        div [ class "col-auto" ]
                             [ div [ onClick (SelectIcon icon), class "pointer" ]
                                 [ Icon.view
                                     ([ class "icon-circle"

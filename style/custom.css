@@ -6,7 +6,6 @@ body {
   box-shadow: 0 2px 2px 1px #ddd;
   border-radius: 2px;
   padding: 20px;
-  margin: 5px;
   position: relative;
   cursor: pointer;
   display: block; }
@@ -48,7 +47,7 @@ a.linked-panel:hover {
 .linked-panel .linked-panel-navigation-clue {
   right: 0; }
 
-.absolute-y-center {
+.absolute-y-center, .input-cross {
   top: 50%;
   transform: translateY(-50%);
   position: absolute; }
@@ -71,5 +70,10 @@ a.linked-panel:hover {
 
 .pointer {
   cursor: pointer; }
+
+.input-cross {
+  right: 1.125rem;
+  color: #ccc;
+  z-index: 1000; }
 
 /*# sourceMappingURL=custom.css.map */

@@ -243,9 +243,6 @@ view model =
             NotFoundPage _ _ _ ->
                 text ""
 
-            HomePage _ _ _ ->
-                text ""
-
             _ ->
                 --                text ""
                 div [ class "container" ] [ Debug.Extra.viewModel model ]
