@@ -295,10 +295,10 @@ subscriptions model =
             Sub.none
 
         TemplatePage m template actualList ->
-            Sub.map TemplateMsg (Page.Template.subscritptions template actualList m)
+            Sub.map TemplateMsg (Page.Template.subscriptions template actualList m)
 
         TodoListPage m template actualList ->
-            Sub.none
+            Sub.map TemplateMsg (Page.TodoList.subscriptions template actualList m)
 
         NotFoundPage record template actualList ->
             Sub.none

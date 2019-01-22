@@ -1,11 +1,12 @@
-module Page.Template.View exposing (Model, Msg, decoder, encoder, getKey, init, update, view)
+module Page.Template.View exposing (Model, Msg, decoder, encoder, getKey, init, subscriptions, update, view)
 
 import ActualList exposing (ActualList(..))
 import Browser.Dom as Dom
+import Browser.Events exposing (onAnimationFrameDelta)
 import Browser.Navigation as Nav
 import Dict exposing (Dict)
 import Html exposing (Html, a, button, div, h2, h4, i, input, label, li, span, text, ul)
-import Html.Attributes exposing (class, href, id, placeholder, type_, value)
+import Html.Attributes exposing (class, classList, href, id, placeholder, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Html.Extra exposing (onEnter)
 import Icon
@@ -15,6 +16,7 @@ import Random
 import Route
 import Task
 import Template exposing (Template(..), TodoTemplate, getTodoByTemplateId)
+import Transition exposing (mapTime)
 import Uuid.Barebones
 
 
@@ -25,6 +27,7 @@ type alias Model =
     , id : String
     , nextTodoIds : List String
     , filter : String
+    , transition : Dict String Transition.Status
     }
 
 
@@ -40,7 +43,14 @@ todoCount templateId todoTemplate =
 
 init : Nav.Key -> String -> Template -> ( Model, Cmd Msg )
 init key templateId (Template _ todoTemplate) =
-    ( { key = key, templateId = templateId, name = "", id = "", nextTodoIds = [], filter = "" }
+    ( { key = key
+      , templateId = templateId
+      , name = ""
+      , id = ""
+      , nextTodoIds = []
+      , filter = ""
+      , transition = Dict.empty
+      }
     , Cmd.batch
         [ Random.generate NewUIDForTodoList Uuid.Barebones.uuidStringGenerator
         , Random.generate NewUIDForTodo (Random.list (todoCount templateId todoTemplate) Uuid.Barebones.uuidStringGenerator)
@@ -57,6 +67,7 @@ type Msg
     | NavigateView String
     | Filter String
     | ClearFilter
+    | UpdateTransitionTime Float
     | NoOp
 
 
@@ -86,7 +97,7 @@ update msg (Template _ todoTemplate) ((ActualList todoLists todos) as actualList
                         |> Dict.fromList
             in
             ( ActualList (Dict.union newTodoList todoLists) (Dict.union newTodos todos)
-            , { model | name = "" }
+            , { model | name = "", transition = Dict.insert model.id (Transition.Enter Transition.Initial 30000) model.transition }
             , Cmd.batch
                 [ Random.generate NewUIDForTodoList Uuid.Barebones.uuidStringGenerator
                 , Random.generate NewUIDForTodo (Random.list (todoCount model.templateId todoTemplate) Uuid.Barebones.uuidStringGenerator)
@@ -111,6 +122,45 @@ update msg (Template _ todoTemplate) ((ActualList todoLists todos) as actualList
 
         NoOp ->
             ( actualList, model, Cmd.none )
+
+        UpdateTransitionTime delta ->
+            ( actualList
+            , { model
+                | transition =
+                    Dict.foldl
+                        (\key value acc ->
+                            let
+                                updatedTime =
+                                    Transition.mapTime
+                                        (\oldTime ->
+                                            oldTime - delta
+                                        )
+                                        value
+                            in
+                            if Transition.isInitial value then
+                                case Transition.nextState value of
+                                    Just nextState ->
+                                        Dict.insert key nextState acc
+
+                                    Nothing ->
+                                        acc
+
+                            else if Transition.getTime updatedTime <= 0 then
+                                case Transition.nextState value of
+                                    Just nextState ->
+                                        Dict.insert key nextState acc
+
+                                    Nothing ->
+                                        acc
+
+                            else
+                                Dict.insert key updatedTime acc
+                        )
+                        Dict.empty
+                        model.transition
+              }
+            , Cmd.none
+            )
 
 
 view : Template -> ActualList -> Model -> Html Msg
@@ -186,7 +236,7 @@ view (Template todoListTemplates _) (ActualList todoLists todos) model =
                 , ul [ class "list-unstyled row" ]
                     (List.map
                         (\( id, todoList ) ->
-                            li [ class gridRule ]
+                            li [ class gridRule, class (transitionToClass "linked-panel-animation" model.transition id) ]
                                 [ div [ class "linked-panel list-group", onClick (NavigateView id) ]
                                     [ h4 [ class "linked-panel-title text-center" ] [ text todoList.name ]
                                     , div [ class "linked-panel-navigation-clue" ]
@@ -197,6 +247,40 @@ view (Template todoListTemplates _) (ActualList todoLists todos) model =
                         (Dict.toList filteredCurrentTodoLists)
                     )
                 ]
+
+
+transitionToClass prefix transitions id =
+    case Dict.get id transitions of
+        Nothing ->
+            ""
+
+        Just (Transition.Enter Transition.Initial _) ->
+            prefix ++ "-enter"
+
+        Just (Transition.Enter Transition.Active _) ->
+            prefix ++ "-enter " ++ prefix ++ "-enter-active"
+
+        _ ->
+            ""
+
+
+
+-- MISC
+-- current strategy Im trying to implement
+--decrement each transition time in the transition dict, when a transition time is at 0 transition to the next step
+
+
+subscriptions template actualList model =
+    if Dict.isEmpty model.transition then
+        Sub.none
+
+    else
+        onAnimationFrameDelta UpdateTransitionTime
+
+
+getKey : Model -> Nav.Key
+getKey =
+    .key
 
 
 encoder : Model -> Json.Encode.Value
@@ -212,15 +296,11 @@ encoder model =
 
 decoder : Nav.Key -> Json.Decode.Decoder Model
 decoder key =
-    Json.Decode.map6 Model
+    Json.Decode.map7 Model
         (Json.Decode.succeed key)
         (Json.Decode.field "templateId" Json.Decode.string)
         (Json.Decode.field "name" Json.Decode.string)
         (Json.Decode.field "id" Json.Decode.string)
         (Json.Decode.field "nextTodoIds" (Json.Decode.list Json.Decode.string))
         (Json.Decode.field "filter" Json.Decode.string)
-
-
-getKey : Model -> Nav.Key
-getKey =
-    .key
+        (Json.Decode.succeed Dict.empty)

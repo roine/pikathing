@@ -1,4 +1,4 @@
-module Page.TodoList exposing (Model(..), Msg, decoder, encoder, getKey, init, update, view)
+module Page.TodoList exposing (Model(..), Msg, decoder, encoder, getKey, init, subscriptions, update, view)
 
 import ActualList
 import Browser.Navigation as Nav
@@ -25,6 +25,10 @@ init key template route =
                 |> Tuple.mapBoth ViewModel (Cmd.map ViewMsg)
 
 
+
+-- UPDATE
+
+
 type Msg
     = ViewMsg TodoListView.Msg
 
@@ -39,10 +43,24 @@ update msg template actualList model =
             { template = template, actualList = newActualList, model = ViewModel newModel, cmd = Cmd.map ViewMsg cmd }
 
 
+
+-- VIEW
+
+
 view templates actualList model =
     case model of
         ViewModel m ->
             Html.map ViewMsg (TodoListView.view templates actualList m)
+
+
+
+-- MISC
+
+
+subscriptions template actualList model =
+    case model of
+        ViewModel m ->
+            Sub.none
 
 
 getKey : Model -> Nav.Key

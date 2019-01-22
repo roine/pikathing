@@ -1,4 +1,4 @@
-module Page.Template exposing (Model(..), Msg(..), decoder, encoder, getKey, init, subscritptions, update, view)
+module Page.Template exposing (Model(..), Msg(..), decoder, encoder, getKey, init, subscriptions, update, view)
 
 import ActualList exposing (ActualList(..))
 import Browser.Navigation as Nav
@@ -93,8 +93,8 @@ view template actualList model =
 -- MISC
 
 
-subscritptions : Template -> ActualList -> Model -> Sub Msg
-subscritptions template actualList model =
+subscriptions : Template -> ActualList -> Model -> Sub Msg
+subscriptions template actualList model =
     case model of
         AddModel m ->
             Sub.map AddMsg (TemplateAdd.subscriptions template actualList m)
@@ -103,7 +103,7 @@ subscritptions template actualList model =
             Sub.map EditMsg (TemplateEdit.subscriptions template actualList m)
 
         ViewModel m ->
-            Sub.none
+            Sub.map ViewMsg (TemplateView.subscriptions template actualList m)
 
 
 getKey : Model -> Nav.Key
