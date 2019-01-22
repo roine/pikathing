@@ -3,9 +3,10 @@ module Page.TodoList.View exposing (Model, Msg, decoder, encoder, getKey, init, 
 import ActualList exposing (ActualList(..))
 import Browser.Navigation as Nav
 import Dict
-import Html exposing (Html, a, div, h1, h2, input, label, li, span, text, ul)
+import Html exposing (Html, a, button, div, h1, h2, input, label, li, span, text, ul)
 import Html.Attributes exposing (checked, class, href, type_)
-import Html.Events exposing (onCheck)
+import Html.Events exposing (onCheck, onClick)
+import Icon
 import Json.Decode
 import Json.Encode
 import Route
@@ -30,13 +31,33 @@ init key id template =
 
 type Msg
     = Toggle String Bool
+    | Delete
 
 
 update : Msg -> Template -> ActualList -> Model -> ( ActualList, Model, Cmd Msg )
 update msg template (ActualList todoLists todos) model =
     case msg of
         Toggle key checked ->
-            ( ActualList todoLists (Dict.update key (\maybeTodo -> Maybe.map (\todo -> { todo | completed = checked }) maybeTodo) todos), model, Cmd.none )
+            ( ActualList todoLists
+                (Dict.update key
+                    (\maybeTodo ->
+                        Maybe.map (\todo -> { todo | completed = checked }) maybeTodo
+                    )
+                    todos
+                )
+            , model
+            , Cmd.none
+            )
+
+        Delete ->
+            let
+                newTodoLists =
+                    Dict.remove model.id todoLists
+
+                newTodos =
+                    Dict.diff todos (getTodoByTemplateId model.id todos)
+            in
+            ( ActualList newTodoLists newTodos, model, Nav.back model.key 1 )
 
 
 
@@ -92,6 +113,7 @@ view (Template todoListTemplates todoTemplates) (ActualList todoLists todos) { i
                         )
                         (Dict.toList list.todos)
                     )
+                , button [ class "btn btn-danger", onClick Delete ] [ Icon.view [] Icon.Trash ]
                 ]
         )
 

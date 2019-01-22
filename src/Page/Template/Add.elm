@@ -1,6 +1,7 @@
-module Page.Template.Add exposing (Model, Msg(..), decoder, encoder, getKey, init, update, view)
+module Page.Template.Add exposing (Model, Msg(..), decoder, encoder, getKey, init, subscriptions, update, view)
 
 import ActualList exposing (ActualList(..))
+import Browser.Events
 import Browser.Navigation as Nav
 import Color exposing (Color)
 import Dict exposing (Dict)
@@ -124,6 +125,22 @@ view template actualList model =
 
 
 -- MISC
+
+
+subscriptions : Template -> ActualList -> Model -> Sub Msg
+subscriptions template actualList model =
+    Browser.Events.onKeyDown
+        (Json.Decode.map2
+            (\meta key ->
+                if meta && key == "Enter" then
+                    Save
+
+                else
+                    NoOp
+            )
+            (Json.Decode.field "metaKey" Json.Decode.bool)
+            (Json.Decode.field "key" Json.Decode.string)
+        )
 
 
 getKey : Model -> Nav.Key

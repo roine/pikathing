@@ -4,9 +4,10 @@ import ActualList exposing (ActualList(..))
 import Browser.Events
 import Browser.Navigation as Nav
 import Dict exposing (Dict)
-import Html exposing (Html, button, div, text)
+import Html exposing (Html, button, div, span, text)
 import Html.Attributes exposing (class, disabled, type_)
 import Html.Events exposing (onClick)
+import Icon
 import Json.Decode
 import Json.Encode
 import Page.Template.Form as Form
@@ -45,6 +46,7 @@ type Msg
     | NewUIDForTodo String
     | Save
     | DoSave (Dict String TodoTemplate) (List String)
+    | Delete
     | Cancel
     | NoOp
 
@@ -130,6 +132,35 @@ update msg ((Template todoListTemplates todoTemplates) as templates) ((ActualLis
             , cmd = Cmd.none
             }
 
+        Delete ->
+            let
+                newTodoListTemplates =
+                    todoListTemplates |> Dict.remove model.form.id
+
+                todoTemplateKeys =
+                    getTodoByTemplateId model.form.id todoTemplates |> Dict.keys
+
+                newTodoTemplates =
+                    List.foldl (\keyToDelete dict -> Dict.remove keyToDelete dict) todoTemplates todoTemplateKeys
+
+                todoListKeys =
+                    getTodoByTemplateId model.form.id todoLists |> Dict.keys
+
+                newTodoLists =
+                    List.foldl (\keyToDelete dict -> Dict.remove keyToDelete dict) todoLists todoListKeys
+
+                todoKeys =
+                    List.concatMap (\keys -> getTodoByTemplateId keys todos |> Dict.keys) todoListKeys |> Debug.log "keys"
+
+                newTodos =
+                    List.foldl (\keyToDelete dict -> Dict.remove keyToDelete dict) todos todoKeys
+            in
+            { templates = Template newTodoListTemplates newTodoTemplates
+            , actualLists = ActualList newTodoLists newTodos
+            , model = model
+            , cmd = Nav.pushUrl model.key (Route.toString Route.Home)
+            }
+
         NoOp ->
             { templates = templates, actualLists = actualLists, model = model, cmd = Cmd.none }
 
@@ -143,7 +174,7 @@ view template actualList model =
     div []
         [ Html.map FormMsg (Form.view template actualList model.form)
         , div [ class "row" ]
-            [ div [ class "col-6" ] [ button [ onClick Cancel, class "btn btn-danger", type_ "button" ] [ text "Cancel" ] ]
+            [ div [ class "col-6" ] [ button [ onClick Cancel, class "btn btn-warning", type_ "button" ] [ text "Cancel" ] ]
             , div [ class "col-6 text-right" ]
                 [ button
                     [ onClick Save
@@ -153,6 +184,13 @@ view template actualList model =
                     ]
                     [ text "Update" ]
                 ]
+            ]
+        , div [ class "row mt-3 text-right" ]
+            [ div []
+                [ span [ class "mr-2 vertical-center" ]
+                    [ text "Delete your template" ]
+                ]
+            , button [ class "btn btn-danger", onClick Delete ] [ Icon.view [] Icon.Trash ]
             ]
         ]
 

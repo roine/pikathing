@@ -97,7 +97,7 @@ subscritptions : Template -> ActualList -> Model -> Sub Msg
 subscritptions template actualList model =
     case model of
         AddModel m ->
-            Sub.none
+            Sub.map AddMsg (TemplateAdd.subscriptions template actualList m)
 
         EditModel m ->
             Sub.map EditMsg (TemplateEdit.subscriptions template actualList m)

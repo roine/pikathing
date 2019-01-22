@@ -120,67 +120,68 @@ view (Template todoListTemplates todoTemplates) (ActualList todoList todo) model
                     ]
                 ]
         , ul [ class "list-unstyled row" ]
-            (Dict.foldl
-                (\id template acc ->
-                    let
-                        currentTodoLists =
-                            getTodoByTemplateId id todoList
+            ((li [ class gridRule ]
+                [ a [ href (Route.toString (Route.Template Route.AddPage)), class "linked-panel" ]
+                    [ h4 [ class "linked-panel-title absolute-center" ] [ text "+" ]
+                    ]
+                ]
+                :: Dict.foldl
+                    (\id template acc ->
+                        let
+                            currentTodoLists =
+                                getTodoByTemplateId id todoList
 
-                        copyCount =
-                            currentTodoLists |> Dict.size
+                            copyCount =
+                                currentTodoLists |> Dict.size
 
-                        criteriaCount =
-                            getTodoByTemplateId id todoTemplates |> Dict.size
+                            criteriaCount =
+                                getTodoByTemplateId id todoTemplates |> Dict.size
 
-                        hasIcon =
-                            case template.icon of
-                                Nothing ->
-                                    False
+                            hasIcon =
+                                case template.icon of
+                                    Nothing ->
+                                        False
 
-                                Just _ ->
-                                    True
-                    in
-                    li [ class gridRule ]
-                        [ div
-                            [ classList [ ( "linked-panel list-group", True ), ( "linked-panel-with-icon", hasIcon ) ]
-                            , onClick (NavigateView id)
-                            ]
-                            [ case template.icon of
-                                Nothing ->
-                                    text ""
-
-                                Just icon ->
-                                    div [ class "text-center" ]
-                                        [ Icon.view
-                                            ([ class "icon-circle"
-                                             ]
-                                                ++ colourStyle template.colour
-                                            )
-                                            icon
-                                        ]
-                            , h4 [ class "linked-panel-title text-center" ]
-                                [ text template.name
+                                    Just _ ->
+                                        True
+                        in
+                        li [ class gridRule ]
+                            [ div
+                                [ classList [ ( "linked-panel list-group", True ), ( "linked-panel-with-icon", hasIcon ) ]
+                                , onClick (NavigateView id)
                                 ]
-                            , div [ class "text-center linked-panel-subtitle" ]
-                                [ span [ class "badge badge-dark badge-pill" ] [ text (String.fromInt copyCount) ]
+                                [ case template.icon of
+                                    Nothing ->
+                                        text ""
+
+                                    Just icon ->
+                                        div [ class "text-center" ]
+                                            [ Icon.view
+                                                ([ class "icon-circle"
+                                                 ]
+                                                    ++ colourStyle template.colour
+                                                )
+                                                icon
+                                            ]
+                                , h4 [ class "linked-panel-title text-center" ]
+                                    [ text template.name
+                                    ]
+                                , div [ class "text-center linked-panel-subtitle" ]
+                                    [ span [ class "badge badge-dark badge-pill" ] [ text (String.fromInt copyCount) ]
+                                    ]
+                                , button [ onClick (NavigateToEdit id), class "linked-panel-edit" ]
+                                    [ i [ class "fa fa-pencil-alt" ] []
+                                    ]
+                                , div [ class "linked-panel-navigation-clue" ]
+                                    [ i [ class "fa fa-arrow-right" ] [] ]
                                 ]
-                            , button [ onClick (NavigateToEdit id), class "linked-panel-edit" ]
-                                [ i [ class "fa fa-pencil-alt" ] []
-                                ]
-                            , div [ class "linked-panel-navigation-clue" ]
-                                [ i [ class "fa fa-arrow-right" ] [] ]
                             ]
-                        ]
-                        :: acc
-                )
-                []
-                filteredTodoListTemplates
-                ++ [ li [ class gridRule ]
-                        [ a [ href (Route.toString (Route.Template Route.AddPage)), class "linked-panel" ]
-                            [ h4 [ class "linked-panel-title absolute-center" ] [ text "+" ]
-                            ]
-                        ]
-                   ]
+                            :: acc
+                    )
+                    []
+                    filteredTodoListTemplates
+             )
+                |> List.reverse
             )
         ]
 

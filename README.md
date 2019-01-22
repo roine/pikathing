@@ -20,4 +20,3 @@ Remaining work
 todolist uses this template uses it, the number of todos assign should change accordingly
 - Edit a todolist
 - Comparison of todolists
-- Add filter
