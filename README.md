@@ -16,7 +16,6 @@ For production
 
 Remaining work
 ==
-- Edit the templates, todolist and todo ones. When changing a todolist template by adding todos to it, if a 
-todolist uses this template uses it, the number of todos assign should change accordingly
 - Edit a todolist
 - Comparison of todolists
+- add animations

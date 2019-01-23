@@ -1,4 +1,4 @@
-module Page.Home exposing (Model, Msg(..), decoder, encoder, getKey, init, update, view)
+module Page.Home exposing (Model, Msg(..), decoder, encoder, getKey, init, subscriptions, update, view)
 
 import ActualList exposing (ActualList(..))
 import Browser.Dom as Dom
@@ -188,6 +188,11 @@ view (Template todoListTemplates todoTemplates) (ActualList todoList todo) model
 
 
 -- MISC
+
+
+subscriptions : Template -> ActualList -> Model -> Sub Msg
+subscriptions templates actualLists model =
+    Sub.none
 
 
 getKey : Model -> Nav.Key

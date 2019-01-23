@@ -192,25 +192,6 @@ update msg model =
                     ( ErrorPage err (getKey model) Template.init ActualList.init, Cmd.none )
 
 
-getKey : Model -> Nav.Key
-getKey model =
-    case model of
-        HomePage m _ _ ->
-            Page.Home.getKey m
-
-        NotFoundPage m _ _ ->
-            m.key
-
-        TemplatePage m _ _ ->
-            Page.Template.getKey m
-
-        TodoListPage m _ _ ->
-            Page.TodoList.getKey m
-
-        ErrorPage error key template _ ->
-            key
-
-
 
 -- VIEW
 
@@ -292,7 +273,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     case model of
         HomePage m template actualList ->
-            Sub.none
+            Sub.map HomeMsg (Page.Home.subscriptions template actualList m)
 
         TemplatePage m template actualList ->
             Sub.map TemplateMsg (Page.Template.subscriptions template actualList m)
@@ -305,10 +286,6 @@ subscriptions model =
 
         ErrorPage error key template actualList ->
             Sub.none
-
-
-
--- INIT
 
 
 decoded : Nav.Key -> String -> Result Json.Decode.Error Model
@@ -350,6 +327,25 @@ encoded =
     Json.Encode.encode 0
 
 
+getKey : Model -> Nav.Key
+getKey model =
+    case model of
+        HomePage m _ _ ->
+            Page.Home.getKey m
+
+        NotFoundPage m _ _ ->
+            m.key
+
+        TemplatePage m _ _ ->
+            Page.Template.getKey m
+
+        TodoListPage m _ _ ->
+            Page.TodoList.getKey m
+
+        ErrorPage error key template _ ->
+            key
+
+
 getTemplateFromModel : Model -> Template
 getTemplateFromModel model =
     case model of
@@ -386,6 +382,10 @@ getActualListFromModel model =
 
         ErrorPage error key _ actualList ->
             actualList
+
+
+
+-- INIT
 
 
 main : Program Flags Model Msg
