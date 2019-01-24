@@ -221,7 +221,6 @@ update now model =
                         Maybe.map (\status -> { transition | status = status }) (nextState transition.status)
                 )
                 model.transitions
-                |> Debug.log "transitions"
         , time = now
     }
 

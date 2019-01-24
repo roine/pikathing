@@ -1,0 +1,64 @@
+
+$gutter: 20px;
+
+.linked-panel {
+  background: #fff;
+  box-shadow: 0 2px 2px 1px #ddd;
+  border-radius: 2px;
+  padding: $gutter;
+  position: relative;
+  cursor: pointer;
+  display: block;
+}
+
+a.linked-panel {
+  color: inherit;
+}
+
+a.linked-panel:hover {
+  text-decoration: none;
+}
+
+.linked-panel .linked-panel-title {
+  font-size: 30px;
+  font-weight: bold;
+  padding-bottom: 20px;
+}
+
+.linked-panel.linked-panel--plus .linked-panel-title {
+  padding-bottom: 0;
+}
+
+.linked-panel.linked-panel-with-icon .linked-panel-title {
+  font-size: 20px;
+}
+
+.linked-panel .linked-panel-subtitle {
+  font-size: 80%;
+}
+
+
+.linked-panel .linked-panel-navigation-clue {
+  position: absolute;
+  right: $gutter;
+  bottom: $gutter;
+  color: #aaa;
+}
+
+.linked-panel .linked-panel-edit, .linked-panel .linked-panel-navigation-clue {
+  position: absolute;
+  bottom: 0;
+  color: #aaa;
+  padding: $gutter;
+  background: #fff;
+  border: none;
+  cursor: pointer;
+}
+
+.linked-panel .linked-panel-edit {
+  left: 0;
+}
+
+.linked-panel .linked-panel-navigation-clue {
+  right: 0;
+}

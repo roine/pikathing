@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "name": "plume",
+  "alias": "plume-sojo.now.sh",
+  "routes": [
+    {
+      "src": "/(.+)(png|md|svg|css|map|js)",
+      "dest": "/$1$2"
+    },
+    {
+      "src": "^/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}

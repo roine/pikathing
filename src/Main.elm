@@ -5,7 +5,6 @@ port module Main exposing (Flags, Model(..), Msg(..), bodyView, getKey, init, ma
 import ActualList exposing (ActualList(..))
 import Browser exposing (Document)
 import Browser.Navigation as Nav
-import Debug.Extra
 import File exposing (File)
 import File.Select as Select
 import Html exposing (Html, a, button, code, div, h1, li, p, pre, text, ul)
@@ -225,8 +224,9 @@ view model =
                 text ""
 
             _ ->
-                --                text ""
-                div [ class "container" ] [ Debug.Extra.viewModel model ]
+                text ""
+
+        --                div [ class "container" ] [ Debug.Extra.viewModel model ]
         ]
     }
 

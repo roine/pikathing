@@ -1,5 +1,5 @@
 {
-  "name": "elm-bootstrap",
+  "name": "plume",
   "version": "1.0.0",
   "description": "When starting an ELM project I always end up writing the same boilerplate and configuring the same packaging system. Elm boilerplate takes care of that for you.",
   "main": "index.js",
@@ -9,7 +9,8 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "parcel index.html"
+    "start": "parcel index.html",
+    "deploy": "parcel build index.html && cd dist && now --local-config=../now.json && cd .. && now alias && now remove plume --safe -y"
   },
   "repository": {
     "type": "git",

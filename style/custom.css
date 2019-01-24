@@ -24,9 +24,6 @@
   opacity: 0;
   right: -200px; }
 
-body {
-  background: #eee; }
-
 .linked-panel {
   background: #fff;
   box-shadow: 0 2px 2px 1px #ddd;
@@ -44,7 +41,11 @@ a.linked-panel:hover {
 
 .linked-panel .linked-panel-title {
   font-size: 30px;
-  font-weight: bold; }
+  font-weight: bold;
+  padding-bottom: 20px; }
+
+.linked-panel.linked-panel--plus .linked-panel-title {
+  padding-bottom: 0; }
 
 .linked-panel.linked-panel-with-icon .linked-panel-title {
   font-size: 20px; }
@@ -72,6 +73,9 @@ a.linked-panel:hover {
 
 .linked-panel .linked-panel-navigation-clue {
   right: 0; }
+
+body {
+  background: #eee; }
 
 .absolute-y-center, .input-cross {
   top: 50%;

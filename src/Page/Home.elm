@@ -7,7 +7,7 @@ import Color
 import Colour.Extra
 import Dict
 import Html exposing (Html, a, button, div, h4, i, input, li, p, span, text, ul)
-import Html.Attributes exposing (class, classList, href, id, placeholder, required, style, type_, value)
+import Html.Attributes exposing (class, classList, href, id, placeholder, required, style, title, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Icon
 import Json.Decode
@@ -121,7 +121,7 @@ view (Template todoListTemplates todoTemplates) (ActualList todoList todo) model
                 ]
         , ul [ class "list-unstyled row" ]
             ((li [ class gridRule ]
-                [ a [ href (Route.toString (Route.Template Route.AddPage)), class "linked-panel" ]
+                [ a [ href (Route.toString (Route.Template Route.AddPage)), class "linked-panel linked-panel--plus" ]
                     [ h4 [ class "linked-panel-title absolute-center" ] [ text "+" ]
                     ]
                 ]
@@ -167,7 +167,7 @@ view (Template todoListTemplates todoTemplates) (ActualList todoList todo) model
                                     [ text template.name
                                     ]
                                 , div [ class "text-center linked-panel-subtitle" ]
-                                    [ span [ class "badge badge-dark badge-pill" ] [ text (String.fromInt copyCount) ]
+                                    [ span [ class "badge badge-dark badge-pill", title (pluralize copyCount "copy" "copies") ] [ text (String.fromInt copyCount) ]
                                     ]
                                 , button [ onClick (NavigateToEdit id), class "linked-panel-edit" ]
                                     [ i [ class "fa fa-pencil-alt" ] []

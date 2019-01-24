@@ -150,7 +150,7 @@ update msg ((Template todoListTemplates todoTemplates) as templates) ((ActualLis
                     List.foldl (\keyToDelete dict -> Dict.remove keyToDelete dict) todoLists todoListKeys
 
                 todoKeys =
-                    List.concatMap (\keys -> getTodoByTemplateId keys todos |> Dict.keys) todoListKeys |> Debug.log "keys"
+                    List.concatMap (\keys -> getTodoByTemplateId keys todos |> Dict.keys) todoListKeys
 
                 newTodos =
                     List.foldl (\keyToDelete dict -> Dict.remove keyToDelete dict) todos todoKeys
