@@ -3,9 +3,9 @@ module Page.TodoList.View exposing (Model, Msg, decoder, encoder, getKey, init, 
 import ActualList exposing (ActualList(..))
 import Browser.Navigation as Nav
 import Dict
-import Html exposing (Html, a, button, div, h1, h2, input, label, li, span, text, ul)
-import Html.Attributes exposing (checked, class, href, type_)
-import Html.Events exposing (onCheck, onClick)
+import Html exposing (Html, a, button, div, h1, h2, input, label, li, span, text, textarea, ul)
+import Html.Attributes exposing (checked, class, href, type_, value)
+import Html.Events exposing (onCheck, onClick, onInput)
 import Icon
 import Json.Decode
 import Json.Encode
@@ -32,6 +32,7 @@ init key id template =
 type Msg
     = Toggle String Bool
     | Delete
+    | UpdateNotes String
 
 
 update : Msg -> Template -> ActualList -> Model -> ( ActualList, Model, Cmd Msg )
@@ -59,6 +60,18 @@ update msg template (ActualList todoLists todos) model =
             in
             ( ActualList newTodoLists newTodos, model, Nav.back model.key 1 )
 
+        UpdateNotes string ->
+            ( ActualList
+                (Dict.update
+                    model.id
+                    (\maybeTodoList -> Maybe.map (\todoList -> { todoList | notes = string }) maybeTodoList)
+                    todoLists
+                )
+                todos
+            , model
+            , Cmd.none
+            )
+
 
 
 -- VIEW
@@ -70,7 +83,7 @@ view (Template todoListTemplates todoTemplates) (ActualList todoLists todos) { i
         allData =
             Dict.get id todoLists
                 |> Maybe.map
-                    (\{ name, templateId } ->
+                    (\{ name, templateId, notes } ->
                         { name = name
                         , templateId = templateId
                         , templateName = Maybe.map .name (Dict.get templateId todoListTemplates) |> Maybe.withDefault ""
@@ -82,6 +95,7 @@ view (Template todoListTemplates todoTemplates) (ActualList todoLists todos) { i
                                         , completed = completed
                                         }
                                     )
+                        , notes = notes
                         }
                     )
     in
@@ -113,6 +127,7 @@ view (Template todoListTemplates todoTemplates) (ActualList todoLists todos) { i
                         )
                         (Dict.toList list.todos)
                     )
+                , textarea [ value list.notes, class "form-control", onInput UpdateNotes ] []
                 , button [ class "btn btn-danger", onClick Delete ] [ Icon.view [] Icon.Trash ]
                 ]
         )

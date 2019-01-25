@@ -10,7 +10,7 @@ type ActualList
 
 
 type alias TodoList =
-    { templateId : String, name : String }
+    { templateId : String, name : String, notes : String }
 
 
 type alias Todo =
@@ -26,10 +26,11 @@ encoder (ActualList todolist todo) =
     Json.Encode.object
         [ ( "todoList"
           , Json.Encode.dict identity
-                (\{ name, templateId } ->
+                (\{ name, templateId, notes } ->
                     Json.Encode.object
                         [ ( "templateId", Json.Encode.string templateId )
                         , ( "name", Json.Encode.string name )
+                        , ( "notes", Json.Encode.string notes )
                         ]
                 )
                 todolist
@@ -53,9 +54,10 @@ decoder =
     Json.Decode.map2 ActualList
         (Json.Decode.field "todoList"
             (Json.Decode.dict
-                (Json.Decode.map2 TodoList
+                (Json.Decode.map3 TodoList
                     (Json.Decode.field "templateId" Json.Decode.string)
                     (Json.Decode.field "name" Json.Decode.string)
+                    (Json.Decode.field "notes" Json.Decode.string)
                 )
             )
         )

@@ -81,7 +81,7 @@ update msg (Template _ todoTemplate) ((ActualList todoLists todos) as actualList
         MakeCopy ->
             let
                 newTodoList =
-                    Dict.fromList [ ( model.id, { templateId = model.templateId, name = model.name } ) ]
+                    Dict.fromList [ ( model.id, { templateId = model.templateId, name = model.name, notes = "" } ) ]
 
                 newTodos =
                     List.map2
@@ -102,7 +102,10 @@ update msg (Template _ todoTemplate) ((ActualList todoLists todos) as actualList
 
             else
                 ( ActualList (Dict.union newTodoList todoLists) (Dict.union newTodos todos)
-                , { model | name = "", transition = Dict.insert model.id (Animation.Enter Animation.Initial 300) model.transition }
+                , { model
+                    | name = ""
+                    , transition = Dict.insert model.id (Animation.Enter Animation.Initial 300) model.transition
+                  }
                 , Cmd.batch
                     [ Random.generate NewUIDForTodoList Uuid.Barebones.uuidStringGenerator
                     , Random.generate NewUIDForTodo (Random.list (todoCount model.templateId todoTemplate) Uuid.Barebones.uuidStringGenerator)
