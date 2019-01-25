@@ -13,11 +13,11 @@ import Html.Extra exposing (onEnter)
 import Icon
 import Json.Decode
 import Json.Encode
+import Parser exposing ((|.), (|=), Parser)
 import Random
 import Route
 import Task
 import Template exposing (Template(..), TodoTemplate, getTodoByTemplateId)
-import Time exposing (Posix)
 import Uuid.Barebones
 
 
@@ -168,6 +168,12 @@ update msg (Template _ todoTemplate) ((ActualList todoLists todos) as actualList
             ( actualList, model, Cmd.none )
 
 
+type Comp
+    = Eq Float
+    | Gt Float
+    | Lt Float
+
+
 view : Template -> ActualList -> Model -> Html Msg
 view (Template todoListTemplates _) (ActualList todoLists todos) model =
     let
@@ -181,7 +187,56 @@ view (Template todoListTemplates _) (ActualList todoLists todos) model =
             "col-sm-6 col-xl-3 px-1 py-1"
 
         filteredCurrentTodoLists =
-            Dict.filter (\key { name } -> String.contains (String.toUpper model.filter) (String.toUpper name)) currentTodoLists
+            let
+                trimmedFilter =
+                    String.trim model.filter
+
+                expression =
+                    Parser.succeed identity
+                        |= compParser
+                        |. Parser.spaces
+                        |= Parser.float
+
+                compParser =
+                    Parser.oneOf
+                        [ Parser.map (always Eq) (Parser.symbol "=")
+                        , Parser.map (always Lt) (Parser.symbol "<")
+                        , Parser.map (always Gt) (Parser.symbol ">")
+                        ]
+
+                parse =
+                    Parser.run expression
+            in
+            case parse trimmedFilter of
+                Err err ->
+                    Dict.filter (\key { name } -> String.contains (String.toUpper trimmedFilter) (String.toUpper name)) currentTodoLists
+
+                Ok res ->
+                    Dict.filter
+                        (\key { name } ->
+                            let
+                                currentTodos =
+                                    getTodoByTemplateId key todos
+
+                                points =
+                                    currentTodos
+                                        |> Dict.filter (\_ todo -> todo.completed)
+                                        |> Dict.size
+                                        |> (\completedCount ->
+                                                toFloat completedCount / toFloat (Dict.size currentTodos) * 100
+                                           )
+                            in
+                            case res of
+                                Gt num ->
+                                    num < points
+
+                                Lt num ->
+                                    num > points
+
+                                Eq num ->
+                                    num == points
+                        )
+                        currentTodoLists
     in
     case maybeTemplate of
         Nothing ->
@@ -226,7 +281,7 @@ view (Template todoListTemplates _) (ActualList todoLists todos) model =
                             [ type_ "text"
                             , id "filter-input"
                             , class "form-control"
-                            , placeholder "Filter"
+                            , placeholder "Filter either the name or the points, eg: < 80"
                             , onInput Filter
                             , value model.filter
                             ]
@@ -241,9 +296,22 @@ view (Template todoListTemplates _) (ActualList todoLists todos) model =
                 , ul [ class "list-unstyled row" ]
                     (List.map
                         (\( id, todoList ) ->
+                            let
+                                currentTodos =
+                                    getTodoByTemplateId id todos
+
+                                points =
+                                    currentTodos
+                                        |> Dict.filter (\key todo -> todo.completed)
+                                        |> Dict.size
+                                        |> (\completedCount ->
+                                                toFloat completedCount / toFloat (Dict.size currentTodos) * 100
+                                           )
+                            in
                             li [ class gridRule, class (transitionToClass "linked-panel-animation" model.transition id) ]
                                 [ div [ class "linked-panel list-group", onClick (NavigateView id) ]
                                     [ h4 [ class "linked-panel-title text-center" ] [ text todoList.name ]
+                                    , div [ class "linked-panel-subtitle text-center" ] [ text (String.fromFloat points ++ "%") ]
                                     , div [ class "linked-panel-navigation-clue" ]
                                         [ i [ class "fa fa-arrow-right" ] [] ]
                                     ]
@@ -271,8 +339,6 @@ transitionToClass prefix transitions id =
 
 
 -- MISC
--- current strategy Im trying to implement
---decrement each transition time in the transition dict, when a transition time is at 0 transition to the next step
 
 
 subscriptions : Template -> ActualList -> Model -> Sub Msg
