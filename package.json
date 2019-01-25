@@ -10,7 +10,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "parcel index.html",
-    "deploy": "parcel build index.html && cd dist && now --local-config=../now.json && cd .. && now alias && now remove plume --safe -y"
+    "build": "parcel build index.html",
+    "deploy": "parcel build index.html && cp CNAME dist && cd dist && now --local-config=../now.json && cd .. && now alias && now remove plume --safe -y"
   },
   "repository": {
     "type": "git",
