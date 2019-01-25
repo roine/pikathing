@@ -11,11 +11,12 @@ Run the App
 For development:
 `yarn start`
 
-For production
-`NODE_ENV=production yarn start`
+To build production:
+`yarn build`
+
 
 Remaining work
 ==
 - Edit a todolist
 - Comparison of todolists
-- add animations
+- Improve animation with elm animation rather than css
