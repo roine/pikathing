@@ -1,6 +1,7 @@
 module Page.Template.View exposing (Model, Msg, decoder, encoder, getKey, init, subscriptions, update, view)
 
 import ActualList exposing (ActualList(..))
+import Animation
 import Browser.Dom as Dom
 import Browser.Events exposing (onAnimationFrameDelta)
 import Browser.Navigation as Nav
@@ -17,7 +18,6 @@ import Route
 import Task
 import Template exposing (Template(..), TodoTemplate, getTodoByTemplateId)
 import Time exposing (Posix)
-import Transition
 import Uuid.Barebones
 
 
@@ -28,7 +28,7 @@ type alias Model =
     , id : String
     , nextTodoIds : List String
     , filter : String
-    , animations : Transition.Model
+    , transition : Dict String Animation.Status
     }
 
 
@@ -50,7 +50,7 @@ init key templateId (Template _ todoTemplate) =
       , id = ""
       , nextTodoIds = []
       , filter = ""
-      , animations = Transition.init
+      , transition = Dict.empty
       }
     , Cmd.batch
         [ Random.generate NewUIDForTodoList Uuid.Barebones.uuidStringGenerator
@@ -68,7 +68,7 @@ type Msg
     | NavigateView String
     | Filter String
     | ClearFilter
-    | UpdateTransitionTime Posix
+    | UpdateTransitionTime Float
     | NoOp
 
 
@@ -102,7 +102,7 @@ update msg (Template _ todoTemplate) ((ActualList todoLists todos) as actualList
 
             else
                 ( ActualList (Dict.union newTodoList todoLists) (Dict.union newTodos todos)
-                , { model | name = "", animations = Transition.add model.id (Transition.Enter Transition.Initial 10000) model.animations }
+                , { model | name = "", transition = Dict.insert model.id (Animation.Enter Animation.Initial 300) model.transition }
                 , Cmd.batch
                     [ Random.generate NewUIDForTodoList Uuid.Barebones.uuidStringGenerator
                     , Random.generate NewUIDForTodo (Random.list (todoCount model.templateId todoTemplate) Uuid.Barebones.uuidStringGenerator)
@@ -125,17 +125,47 @@ update msg (Template _ todoTemplate) ((ActualList todoLists todos) as actualList
         ClearFilter ->
             ( actualList, { model | filter = "" }, Cmd.none )
 
-        NoOp ->
-            ( actualList, model, Cmd.none )
-
-        UpdateTransitionTime now ->
+        UpdateTransitionTime delta ->
             ( actualList
             , { model
-                | animations =
-                    Transition.update now model.animations
+                | transition =
+                    Dict.foldl
+                        (\key value acc ->
+                            let
+                                updatedTime =
+                                    Animation.mapTime
+                                        (\oldTime ->
+                                            oldTime - delta
+                                        )
+                                        value
+                            in
+                            if Animation.isInitial value then
+                                case Animation.nextState value of
+                                    Just nextState ->
+                                        Dict.insert key nextState acc
+
+                                    Nothing ->
+                                        acc
+
+                            else if Animation.getTime updatedTime <= 0 then
+                                case Animation.nextState value of
+                                    Just nextState ->
+                                        Dict.insert key nextState acc
+
+                                    Nothing ->
+                                        acc
+
+                            else
+                                Dict.insert key updatedTime acc
+                        )
+                        Dict.empty
+                        model.transition
               }
             , Cmd.none
             )
+
+        NoOp ->
+            ( actualList, model, Cmd.none )
 
 
 view : Template -> ActualList -> Model -> Html Msg
@@ -211,7 +241,7 @@ view (Template todoListTemplates _) (ActualList todoLists todos) model =
                 , ul [ class "list-unstyled row" ]
                     (List.map
                         (\( id, todoList ) ->
-                            li [ class gridRule, class (transitionToClass "linked-panel-animation" model.animations id) ]
+                            li [ class gridRule, class (transitionToClass "linked-panel-animation" model.transition id) ]
                                 [ div [ class "linked-panel list-group", onClick (NavigateView id) ]
                                     [ h4 [ class "linked-panel-title text-center" ] [ text todoList.name ]
                                     , div [ class "linked-panel-navigation-clue" ]
@@ -224,23 +254,34 @@ view (Template todoListTemplates _) (ActualList todoLists todos) model =
                 ]
 
 
-transitionToClass : String -> Transition.Model -> String -> String
-transitionToClass prefix animations id =
-    case Dict.get id animations.transitions of
+transitionToClass prefix transitions id =
+    case Dict.get id transitions of
         Nothing ->
             ""
 
-        Just transition ->
-            Transition.toClass prefix transition.status
+        Just (Animation.Enter Animation.Initial _) ->
+            prefix ++ "-enter"
+
+        Just (Animation.Enter Animation.Active _) ->
+            prefix ++ "-enter " ++ prefix ++ "-enter-active"
+
+        _ ->
+            ""
 
 
 
 -- MISC
+-- current strategy Im trying to implement
+--decrement each transition time in the transition dict, when a transition time is at 0 transition to the next step
 
 
 subscriptions : Template -> ActualList -> Model -> Sub Msg
 subscriptions template actualList model =
-    Transition.subscriptions model.animations UpdateTransitionTime
+    if Dict.isEmpty model.transition then
+        Sub.none
+
+    else
+        onAnimationFrameDelta UpdateTransitionTime
 
 
 getKey : Model -> Nav.Key
@@ -268,4 +309,4 @@ decoder key =
         (Json.Decode.field "id" Json.Decode.string)
         (Json.Decode.field "nextTodoIds" (Json.Decode.list Json.Decode.string))
         (Json.Decode.field "filter" Json.Decode.string)
-        Transition.decoder
+        (Json.Decode.succeed Dict.empty)
