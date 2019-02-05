@@ -14,7 +14,10 @@ type alias TodoList =
 
 
 type alias Todo =
-    { templateId : String, completed : Bool, todoId : String }
+    { templateId : String --todolist where the tod0 belong
+    , completed : Bool
+    , todoId : String -- tod0 template
+    }
 
 
 init =

@@ -88,32 +88,34 @@ update msg ((Template todoListTemplates todoTemplates) as templates) ((ActualLis
             { templates = Template (Dict.insert model.form.id (Template.buildTodoList model.form) todoListTemplates) (Dict.union todoTemplates model.form.todos)
             , actualLists = actualLists
             , model = model
-            , cmd = Random.generate (DoSave (Dict.diff model.form.todos todoTemplates)) (Random.list (newTodoCount * assignedTodolistCount) Uuid.Barebones.uuidStringGenerator)
+            , cmd =
+                Random.generate
+                    (DoSave (Dict.diff model.form.todos todoTemplates))
+                    (Random.list (newTodoCount * assignedTodolistCount) Uuid.Barebones.uuidStringGenerator)
             }
 
         DoSave listNewTodoTemplates listIds ->
             let
                 newTodos =
-                    List.map2
-                        (\todolistId todoId ->
-                            List.map
-                                (\( todoTemplateId, todo ) ->
-                                    ( todoId
-                                    , { templateId = todolistId
-                                      , completed = False
-                                      , todoId = todoTemplateId
-                                      }
-                                    )
-                                )
-                                (Dict.toList listNewTodoTemplates)
-                        )
-                        (getTodoByTemplateId model.form.id todoLists |> Dict.keys)
+                    List.map2 Tuple.pair
                         listIds
-                        |> List.concat
+                        (List.concatMap
+                            (\( todoId, { templateId } ) ->
+                                List.map
+                                    (\listId ->
+                                        { completed = False
+                                        , templateId = listId
+                                        , todoId = todoId
+                                        }
+                                    )
+                                    (getTodoByTemplateId templateId todoLists |> Dict.keys)
+                            )
+                            (listNewTodoTemplates |> Dict.toList)
+                        )
                         |> Dict.fromList
             in
             { templates = templates
-            , actualLists = ActualList todoLists (Dict.union newTodos todos)
+            , actualLists = ActualList todoLists (Dict.union todos newTodos)
             , model = model
             , cmd = Nav.back model.key 1
             }
