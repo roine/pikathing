@@ -13,6 +13,8 @@ type Icon
     | Cross
     | Briefcase
     | Trash
+    | Pass
+    | Fail
 
 
 fromString : String -> Maybe Icon
@@ -41,6 +43,12 @@ fromString str =
 
         "trash" ->
             Just Trash
+
+        "times-circle" ->
+            Just Fail
+
+        "check-circle" ->
+            Just Pass
 
         _ ->
             Nothing
@@ -76,6 +84,12 @@ toString icon =
 
         Trash ->
             "trash"
+
+        Pass ->
+            "check-circle"
+
+        Fail ->
+            "times-circle"
 
 
 view : List (Html.Attribute msg) -> Icon -> Html msg

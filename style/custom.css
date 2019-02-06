@@ -95,8 +95,7 @@ body {
   display: inline-block;
   padding: 20px;
   border-radius: 100px;
-  text-align: center;
-  margin-bottom: 20px; }
+  text-align: center; }
 
 .pointer {
   cursor: pointer; }
@@ -105,5 +104,13 @@ body {
   right: 1.125rem;
   color: #ccc;
   z-index: 1000; }
+
+.comparison__item {
+  box-shadow: 0 2px 2px 1px #ddd;
+  border-radius: 3px; }
+  .comparison__item__left {
+    border-radius: 3px 0 0 3px; }
+  .comparison__item__right {
+    border-radius: 0 3px 3px 0; }
 
 /*# sourceMappingURL=custom.css.map */

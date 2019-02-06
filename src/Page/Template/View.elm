@@ -6,16 +6,17 @@ import Browser.Dom as Dom
 import Browser.Events exposing (onAnimationFrameDelta)
 import Browser.Navigation as Nav
 import Dict exposing (Dict)
-import Html exposing (Html, a, button, div, h2, h4, i, input, label, li, span, text, ul)
-import Html.Attributes exposing (class, href, id, placeholder, type_, value)
-import Html.Events exposing (onClick, onInput)
+import Html exposing (Html, a, button, div, h2, h3, h4, h5, i, input, label, li, small, span, text, ul)
+import Html.Attributes exposing (attribute, class, classList, for, href, id, placeholder, title, type_, value)
+import Html.Events exposing (onClick, onInput, stopPropagationOn)
 import Html.Extra exposing (onEnter)
 import Icon
 import Json.Decode
 import Json.Encode
 import Parser exposing ((|.), (|=), Parser)
 import Random
-import Route
+import Route exposing (Page)
+import String.Extra
 import Task
 import Template exposing (Template(..), TodoTemplate, getTodoByTemplateId)
 import Uuid.Barebones
@@ -29,6 +30,7 @@ type alias Model =
     , nextTodoIds : List String
     , filter : String
     , transition : Dict String Animation.Status
+    , toCompare : ( Maybe String, Maybe String )
     }
 
 
@@ -51,6 +53,7 @@ init key templateId (Template _ todoTemplate) =
       , nextTodoIds = []
       , filter = ""
       , transition = Dict.empty
+      , toCompare = ( Nothing, Nothing )
       }
     , Cmd.batch
         [ Random.generate NewUIDForTodoList Uuid.Barebones.uuidStringGenerator
@@ -69,6 +72,7 @@ type Msg
     | Filter String
     | ClearFilter
     | UpdateTransitionTime Float
+    | AddComparison String
     | NoOp
 
 
@@ -170,6 +174,30 @@ update msg (Template _ todoTemplate) ((ActualList todoLists todos) as actualList
         NoOp ->
             ( actualList, model, Cmd.none )
 
+        AddComparison string ->
+            if exists string model.toCompare then
+                ( actualList
+                , { model | toCompare = ( Nothing, Nothing ) }
+                , Cmd.none
+                )
+
+            else
+                case model.toCompare of
+                    ( Just id1, Just id2 ) ->
+                        ( actualList
+                        , { model | toCompare = ( Nothing, Nothing ) }
+                        , Nav.pushUrl model.key (Route.toString (Route.Compare id1 id2))
+                        )
+
+                    ( Nothing, Nothing ) ->
+                        ( actualList, { model | toCompare = ( Nothing, Just string ) }, Cmd.none )
+
+                    ( Nothing, Just id1 ) ->
+                        ( actualList, { model | toCompare = ( Nothing, Just string ) }, Nav.pushUrl model.key (Route.toString (Route.Compare id1 string)) )
+
+                    ( Just id1, Nothing ) ->
+                        ( actualList, { model | toCompare = ( Nothing, Just string ) }, Nav.pushUrl model.key (Route.toString (Route.Compare id1 string)) )
+
 
 type Comp
     = Eq Float
@@ -187,7 +215,7 @@ view (Template todoListTemplates _) (ActualList todoLists todos) model =
             Dict.get model.templateId todoListTemplates
 
         gridRule =
-            "col-sm-6 col-xl-3 px-1 py-1"
+            "col-sm-6 col-xl-3 px-2 py-1"
 
         filteredCurrentTodoLists =
             let
@@ -243,48 +271,51 @@ view (Template todoListTemplates _) (ActualList todoLists todos) model =
     in
     case maybeTemplate of
         Nothing ->
-            div [] [ text "This template does not exists" ]
+            div [ class "template__view" ] [ text "This template does not exists" ]
 
         Just template ->
-            div []
-                [ div [ class "row align-items-center" ]
+            div [ class "template__view" ]
+                [ div [ class "row align-items-center justify-content-center mb-4" ]
                     [ h2 [ class "col-auto pr-1" ]
                         [ text template.name
                         ]
                     , div [ class "col-auto pl-1" ]
-                        [ a [ href (Route.toString (Route.Template (Route.EditPage model.templateId))), class "badge badge-primary" ]
-                            [ i [ class "fa fa-pencil-alt" ] []
+                        [ a [ href (Route.toString (Route.Template (Route.EditPage model.templateId))) ]
+                            [ i [ class "fa fa-pencil-alt", title "Edit the template" ] []
                             ]
                         ]
                     ]
-                , div [ class "form-row mb-5" ]
-                    [ div [ class "col-auto " ]
-                        [ label [ class "sr-only" ] [ text "Name" ]
-                        , input
-                            [ onInput UpdateName
-                            , value model.name
-                            , class "form-control"
-                            , placeholder "Name of the copy, eg: Porsche"
-                            , onEnter MakeCopy
-                            , id "copy-input"
+                , div [ class "row mb-5" ]
+                    [ div [ class "col-12 px-2" ]
+                        [ div [ class "form-group" ]
+                            [ label [ for "copy-input" ] [ text "Name" ]
+                            , input
+                                [ onInput UpdateName
+                                , value model.name
+                                , class "form-control"
+                                , placeholder "eg: Porsche"
+                                , attribute "aria-describedby" "copy-help"
+                                , onEnter MakeCopy
+                                , id "copy-input"
+                                ]
+                                []
+                            , small [ id "copy-help", class "form-text text-muted" ] [ text "The name of the thing you want. Eg: iPhone." ]
                             ]
-                            []
-                        ]
-                    , div [ class "col-auto" ]
-                        [ button
+                        , button
                             [ onClick MakeCopy
-                            , class "btn btn-primary"
+                            , class "btn btn-primary text-right"
                             ]
                             [ text "Make a new copy" ]
                         ]
                     ]
+                , div [ class "text-center text-muted" ] [ i [] [ text (template.name ++ ": You have " ++ String.fromInt (Dict.size currentTodoLists) ++ " of them") ] ]
                 , div [ class "row my-2" ]
-                    [ div [ class "input-group mx-1" ]
+                    [ div [ class "input-group mx-2" ]
                         [ input
                             [ type_ "text"
                             , id "filter-input"
                             , class "form-control"
-                            , placeholder "Filter either the name or the points, eg: < 80"
+                            , placeholder "Filter either by the name or by the points, eg: < 80"
                             , onInput Filter
                             , value model.filter
                             ]
@@ -314,15 +345,37 @@ view (Template todoListTemplates _) (ActualList todoLists todos) model =
                             li [ class gridRule, class (transitionToClass "linked-panel-animation" model.transition id) ]
                                 [ div [ class "linked-panel list-group", onClick (NavigateView id) ]
                                     [ h4 [ class "linked-panel-title text-center" ] [ text todoList.name ]
-                                    , div [ class "linked-panel-subtitle text-center" ] [ text (String.fromFloat points ++ "%") ]
+                                    , div [ class "linked-panel-subtitle text-center" ] [ text ((String.fromFloat points |> String.Extra.keepLeft 5) ++ "%") ]
                                     , div [ class "linked-panel-navigation-clue" ]
                                         [ i [ class "fa fa-arrow-right" ] [] ]
+                                    , div
+                                        [ stopPropagationOn "click" (Json.Decode.succeed ( AddComparison id, True ))
+                                        , class "badge"
+                                        , classList [ ( "badge-primary", exists id model.toCompare ) ]
+                                        ]
+                                        [ text "Compare" ]
                                     ]
                                 ]
                         )
                         (Dict.toList filteredCurrentTodoLists)
                     )
                 ]
+
+
+exists : String -> ( Maybe String, Maybe String ) -> Bool
+exists id ( id1, id2 ) =
+    case ( id1, id2 ) of
+        ( Nothing, Nothing ) ->
+            False
+
+        ( Just id11, Nothing ) ->
+            id == id11
+
+        ( Nothing, Just id21 ) ->
+            id == id21
+
+        ( Just id11, Just id21 ) ->
+            id == id11 || id == id21
 
 
 transitionToClass prefix transitions id =
@@ -371,7 +424,7 @@ encoder model =
 
 decoder : Nav.Key -> Json.Decode.Decoder Model
 decoder key =
-    Json.Decode.map7 Model
+    Json.Decode.map8 Model
         (Json.Decode.succeed key)
         (Json.Decode.field "templateId" Json.Decode.string)
         (Json.Decode.field "name" Json.Decode.string)
@@ -379,3 +432,4 @@ decoder key =
         (Json.Decode.field "nextTodoIds" (Json.Decode.list Json.Decode.string))
         (Json.Decode.field "filter" Json.Decode.string)
         (Json.Decode.succeed Dict.empty)
+        (Json.Decode.succeed ( Nothing, Nothing ))

@@ -175,7 +175,7 @@ view template actualList model =
             )
         , div []
             [ text "Optionally Pick an icon"
-            , div [ class "row justify-content-start" ]
+            , div [ class "row justify-content-start my-3" ]
                 (List.map
                     (\icon ->
                         div [ class "col-auto" ]

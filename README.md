@@ -19,4 +19,3 @@ Remaining work
 ==
 - Edit a todolist
 - Comparison of todolists
-- Improve animation with elm animation rather than css

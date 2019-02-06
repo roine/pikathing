@@ -9,6 +9,7 @@ type Page
     = Home
     | Template CrudPage
     | TodoList CrudPage
+    | Compare String String
 
 
 type CrudPage
@@ -32,6 +33,7 @@ parser =
         , Parser.map (Template << EditPage) (s "template" </> s "edit" </> string)
         , Parser.map (Template << ViewPage) (s "template" </> s "view" </> string)
         , Parser.map (TodoList << ViewPage) (s "todolist" </> s "view" </> string)
+        , Parser.map Compare (s "compare" </> string </> string)
         ]
 
 
@@ -55,3 +57,6 @@ toString route =
 
         TodoList _ ->
             "/todolist"
+
+        Compare id id2 ->
+            "/compare/" ++ id ++ "/" ++ id2

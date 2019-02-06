@@ -12,10 +12,11 @@ import Html.Attributes exposing (class, href, style)
 import Html.Events exposing (onClick)
 import Json.Decode
 import Json.Encode exposing (Value)
+import Page.Compare
 import Page.Home
 import Page.Template exposing (Model(..), Msg(..))
 import Page.TodoList
-import Route
+import Route exposing (Page(..))
 import Task
 import Template exposing (Template(..))
 import Url
@@ -32,6 +33,7 @@ type Model
     | TemplatePage Page.Template.Model Template ActualList
     | TodoListPage Page.TodoList.Model Template ActualList
     | NotFoundPage { key : Nav.Key } Template ActualList
+    | ComparePage Page.Compare.Model Template ActualList
     | ErrorPage Json.Decode.Error Nav.Key Template ActualList
 
 
@@ -96,6 +98,18 @@ toRoute url key template actualList =
                 ]
             )
 
+        Just (Compare id1 id2) ->
+            let
+                ( compareModel, cmd ) =
+                    Page.Compare.init id1 id2 key
+            in
+            ( ComparePage compareModel template actualList
+            , Cmd.batch
+                [ Cmd.map CompareMsg cmd
+                , save (encoded (Page.Compare.encoder template actualList compareModel))
+                ]
+            )
+
 
 
 -- UPDATE
@@ -107,6 +121,7 @@ type Msg
     | HomeMsg Page.Home.Msg
     | TemplateMsg Page.Template.Msg
     | TodoListMsg Page.TodoList.Msg
+    | CompareMsg Page.Compare.Msg
     | Export
     | Loaded File
     | Import
@@ -173,6 +188,21 @@ update msg model =
         ( TodoListMsg subMsg, _ ) ->
             noOp
 
+        ( CompareMsg subMsg, ComparePage m t actualList ) ->
+            let
+                ( newModel, cmd ) =
+                    Page.Compare.update subMsg m
+            in
+            ( ComparePage newModel t actualList
+            , Cmd.batch
+                [ Cmd.map CompareMsg cmd
+                , save (encoded (Page.Compare.encoder t actualList newModel))
+                ]
+            )
+
+        ( CompareMsg subMsg, _ ) ->
+            noOp
+
         ( Export, _ ) ->
             ( model, export_ () )
 
@@ -207,6 +237,9 @@ view model =
 
             TodoListPage _ _ _ ->
                 "Todo list"
+
+            ComparePage _ _ _ ->
+                "Comparing"
 
             NotFoundPage _ _ _ ->
                 "Not Found"
@@ -253,6 +286,9 @@ bodyView model =
             TodoListPage m t tl ->
                 Html.map TodoListMsg (Page.TodoList.view t tl m)
 
+            ComparePage m t tl ->
+                Html.map CompareMsg (Page.Compare.view t tl m)
+
             NotFoundPage _ _ _ ->
                 text "Page not found"
 
@@ -287,6 +323,9 @@ subscriptions model =
         ErrorPage error key template actualList ->
             Sub.none
 
+        ComparePage m template actualList ->
+            Sub.none
+
 
 decoded : Nav.Key -> String -> Result Json.Decode.Error Model
 decoded key payload =
@@ -317,8 +356,14 @@ decoder key =
                             (Json.Decode.field "template" Template.decoder)
                             (Json.Decode.field "todoList" ActualList.decoder)
 
+                    "Compare" ->
+                        Json.Decode.map3 ComparePage
+                            (Page.Compare.decoder key)
+                            (Json.Decode.field "template" Template.decoder)
+                            (Json.Decode.field "todoList" ActualList.decoder)
+
                     unknownType ->
-                        Json.Decode.fail ("Unknown type" ++ unknownType)
+                        Json.Decode.fail ("Unknown type " ++ unknownType)
             )
 
 
@@ -345,6 +390,9 @@ getKey model =
         ErrorPage error key template _ ->
             key
 
+        ComparePage m _ _ ->
+            Page.Compare.getKey m
+
 
 getTemplateFromModel : Model -> Template
 getTemplateFromModel model =
@@ -364,6 +412,9 @@ getTemplateFromModel model =
         ErrorPage error key template _ ->
             template
 
+        ComparePage _ template _ ->
+            template
+
 
 getActualListFromModel : Model -> ActualList
 getActualListFromModel model =
@@ -381,6 +432,9 @@ getActualListFromModel model =
             actualList
 
         ErrorPage error key _ actualList ->
+            actualList
+
+        ComparePage _ _ actualList ->
             actualList
 
 
