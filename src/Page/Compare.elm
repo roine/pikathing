@@ -3,7 +3,7 @@ module Page.Compare exposing (Model, Msg, decoder, encoder, getKey, init, update
 import ActualList exposing (ActualList(..))
 import Browser.Navigation as Nav
 import Dict
-import Html exposing (Html, div, li, text, ul)
+import Html exposing (Html, div, h4, li, text, ul)
 import Html.Attributes exposing (class, classList, style)
 import Icon
 import Json.Decode
@@ -64,15 +64,15 @@ view (Template todoListTemplates todoTemplates) (ActualList todolists todos) mod
     else
         div []
             [ div [ class "row" ]
-                [ div [ class "col-6 text-center" ] [ text template1Name ]
-                , div [ class "col-6 text-center" ] [ text template2Name ]
+                [ h4 [ class "col-6 text-center" ] [ text template1Name ]
+                , h4 [ class "col-6 text-center" ] [ text template2Name ]
                 ]
-            , div [ class "row mb-4" ]
+            , div [ class "row mt-4" ]
                 (List.map
                     (\item ->
                         div [ class "col-12" ]
-                            [ div [ class "row flex-column " ]
-                                [ div [ class "text-center text-muted" ] [ text item.name ]
+                            [ div [ class "row flex-column" ]
+                                [ div [ class "text-center py-2 initialism" ] [ text item.name ]
                                 , div [ class "row mx-2 bg-light comparison__item" ]
                                     [ div
                                         [ class "col-6 text-center p-3 comparison__item__left"
