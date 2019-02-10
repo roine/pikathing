@@ -93,9 +93,16 @@ body {
   overflow: hidden;
   background: #eee;
   display: inline-block;
-  padding: 20px;
   border-radius: 100px;
-  text-align: center; }
+  text-align: center;
+  position: relative;
+  height: 61px;
+  width: 61px; }
+  .icon-circle .icon {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%); }
 
 .pointer {
   cursor: pointer; }

@@ -156,12 +156,12 @@ view (Template todoListTemplates todoTemplates) (ActualList todoList todo) model
 
                                     Just icon ->
                                         div [ class "text-center" ]
-                                            [ Icon.view
-                                                ([ class "icon-circle"
-                                                 ]
-                                                    ++ colourStyle template.colour
-                                                )
-                                                icon
+                                            [ div ([ class "icon-circle" ] ++ colourStyle template.colour)
+                                                [ Icon.view
+                                                    [ class "icon"
+                                                    ]
+                                                    icon
+                                                ]
                                             ]
                                 , h4 [ class "linked-panel-title text-center" ]
                                     [ text template.name

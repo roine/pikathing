@@ -114,7 +114,7 @@ update msg model =
 
 availableIconsList : List Icon
 availableIconsList =
-    [ Icon.Home, Icon.Laptop, Icon.Car, Icon.Book, Icon.Bed, Icon.Briefcase ]
+    [ Icon.Home, Icon.Laptop, Icon.Car, Icon.Book, Icon.Bed, Icon.Briefcase, Icon.Tv, Icon.Mobile, Icon.Tablet ]
 
 
 view : Template -> ActualList -> Model -> Html Msg
@@ -178,13 +178,10 @@ view template actualList model =
             , div [ class "row justify-content-start my-3" ]
                 (List.map
                     (\icon ->
-                        div [ class "col-auto" ]
-                            [ div [ onClick (SelectIcon icon), class "pointer" ]
+                        div [ class "col-auto my-2" ]
+                            [ div ([ onClick (SelectIcon icon), class "pointer icon-circle" ] ++ colourStyle model.colour (Just icon == model.icon))
                                 [ Icon.view
-                                    ([ class "icon-circle"
-                                     ]
-                                        ++ colourStyle model.colour (Just icon == model.icon)
-                                    )
+                                    [ class "icon" ]
                                     icon
                                 ]
                             ]
