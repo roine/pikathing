@@ -1,0 +1,25 @@
+.linked-panel-animation-enter {
+  opacity: 0;
+  left: -200px;
+  transition: all 300ms ease-in-out; }
+
+.linked-panel-animation-enter.linked-panel-animation-enter-active {
+  opacity: 1;
+  left: 0; }
+
+.linked-panel-animation-enter {
+  opacity: 0;
+  left: -200px; }
+
+.linked-panel-animation-enter.linked-panel-animation-enter-active {
+  opacity: 1;
+  left: 0;
+  transition: all 300ms ease-in-out; }
+
+.linked-panel-animation-leave {
+  right: 0; }
+
+.linked-panel-animation-leave.linked-panel-animation-leave-active {
+  transition: all 300ms ease-in-out;
+  opacity: 0;
+  right: -200px; }
