@@ -348,12 +348,16 @@ view (Template todoListTemplates _) (ActualList todoLists todos) model =
                                     , div [ class "linked-panel-subtitle text-center" ] [ text ((String.fromFloat points |> String.Extra.keepLeft 5) ++ "%") ]
                                     , div [ class "linked-panel-navigation-clue" ]
                                         [ i [ class "fa fa-arrow-right" ] [] ]
-                                    , div
-                                        [ stopPropagationOn "click" (Json.Decode.succeed ( AddComparison id, True ))
-                                        , class "badge"
-                                        , classList [ ( "badge-primary", exists id model.toCompare ) ]
-                                        ]
-                                        [ text "Compare" ]
+                                    , if Dict.size filteredCurrentTodoLists > 1 then
+                                        div
+                                            [ stopPropagationOn "click" (Json.Decode.succeed ( AddComparison id, True ))
+                                            , class "badge "
+                                            , classList [ ( "badge-primary", exists id model.toCompare ) ]
+                                            ]
+                                            [ text "Compare" ]
+
+                                      else
+                                        text ""
                                     ]
                                 ]
                         )

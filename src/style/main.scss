@@ -1,6 +1,7 @@
 body {
   background: red;
 }
+
 @import "custom";
 @import "~bootstrap/scss/bootstrap";
 @import "animations.scss";
@@ -77,5 +78,23 @@ body {
 
   &__right {
     border-radius: 0 3px 3px 0;
+  }
+}
+
+.todo-list {
+  &__item {
+    margin: 7px 0;
+    border-radius: 3px;
+    background: #fff;
+    box-shadow: 0 2px 2px 1px #ddd;
+
+    &--checked {
+      text-decoration: line-through;
+    }
+
+    &__actionable {
+      padding: 5px 10px;
+      cursor: pointer;
+    }
   }
 }

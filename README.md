@@ -18,4 +18,3 @@ To build production:
 Remaining work
 ==
 - Edit a todolist
-- Comparison of todolists

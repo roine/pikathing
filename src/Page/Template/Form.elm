@@ -166,10 +166,10 @@ view template actualList model =
                     ]
                 ]
             ]
-        , ul []
+        , ul [ class "todo-list list-unstyled mt-4" ]
             (List.map
                 (\todo ->
-                    li [] [ text todo.name ]
+                    li [ class "todo-list__item p-2" ] [ text todo.name ]
                 )
                 (Dict.values model.todos)
             )

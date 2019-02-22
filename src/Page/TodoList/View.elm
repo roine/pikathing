@@ -3,8 +3,8 @@ module Page.TodoList.View exposing (Model, Msg, decoder, encoder, getKey, init, 
 import ActualList exposing (ActualList(..))
 import Browser.Navigation as Nav
 import Dict
-import Html exposing (Html, a, button, div, h1, h2, input, label, li, span, text, textarea, ul)
-import Html.Attributes exposing (checked, class, href, type_, value)
+import Html exposing (Html, a, button, div, h1, h2, i, input, label, li, span, text, textarea, ul)
+import Html.Attributes exposing (checked, class, classList, href, type_, value)
 import Html.Events exposing (onCheck, onClick, onInput)
 import Icon
 import Json.Decode
@@ -113,13 +113,23 @@ view (Template todoListTemplates todoTemplates) (ActualList todoLists todos) { i
                     , span [] [ text ">" ]
                     , span [ class "ml-2" ] [ text list.name ]
                     ]
-                , ul [ class "list-unstyled" ]
+                , ul [ class "list-unstyled todo-list" ]
                     (List.map
                         (\( id_, todo ) ->
-                            li []
-                                [ label []
-                                    [ span []
-                                        [ input [ type_ "checkbox", class "mr-2", checked todo.completed, onCheck (Toggle id_) ] []
+                            li [ class "todo-list__item", classList [ ( "todo-list__item--checked", todo.completed ) ] ]
+                                [ label [ class "m-0 d-block todo-list__item__actionable" ]
+                                    [ span [ class "mr-2" ]
+                                        [ i
+                                            [ class "far"
+                                            , classList
+                                                [ ( "fa-square", not todo.completed )
+                                                , ( "fa-check-square", todo.completed )
+                                                ]
+                                            ]
+                                            []
+                                        ]
+                                    , span []
+                                        [ input [ type_ "checkbox", class "mr-2 d-none", checked todo.completed, onCheck (Toggle id_) ] []
                                         ]
                                     , span [] [ text todo.name ]
                                     ]
