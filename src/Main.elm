@@ -228,24 +228,28 @@ update msg model =
 view : Model -> Document Msg
 view model =
     { title =
-        case model of
-            HomePage _ _ _ ->
-                "Homepage"
+        let
+            subTitlte =
+                case model of
+                    HomePage _ _ _ ->
+                        "Homepage"
 
-            TemplatePage _ _ _ ->
-                "Template"
+                    TemplatePage _ _ _ ->
+                        "Template"
 
-            TodoListPage _ _ _ ->
-                "Todo list"
+                    TodoListPage _ _ _ ->
+                        "Todo list"
 
-            ComparePage _ _ _ ->
-                "Comparing"
+                    ComparePage _ _ _ ->
+                        "Comparing"
 
-            NotFoundPage _ _ _ ->
-                "Not Found"
+                    NotFoundPage _ _ _ ->
+                        "Not Found"
 
-            ErrorPage _ _ _ _ ->
-                ""
+                    ErrorPage _ _ _ _ ->
+                        ""
+        in
+        "Plume | " ++ subTitlte
     , body =
         [ navView model
         , bodyView model
